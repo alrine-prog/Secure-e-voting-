@@ -1,60 +1,85 @@
 import { Request, Response } from 'express';
 import prisma from '../prismaClient';
-import { comparePasswords, hashPassword } from '../utils/hash';
-import jwt from 'jsonwebtoken';
-import { createAndSendOtp } from '../services/otpService';
+import crypto from 'crypto';
+import bcrypt from 'bcrypt';
+import { sendNotificationToContact } from '../services/notificationService';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret';
-
+// login
 export const loginHandler = async (req: Request, res: Response) => {
   const { email, password } = req.body;
   if (!email || !password) return res.status(400).json({ error: 'email and password required' });
 
-  const user = await prisma.user.findUnique({ where: { email } });
-  if (!user) return res.status(401).json({ error: 'invalid credentials' });
-
-  const ok = await comparePasswords(password, user.passwordHash);
-  if (!ok) return res.status(401).json({ error: 'invalid credentials' });
-
-  const token = jwt.sign({ userId: user.id, role: user.role, universityId: user.universityId }, JWT_SECRET, { expiresIn: '8h' });
-  return res.json({ token, user: { id: user.id, email: user.email, role: user.role } });
-};
-
-export const forgotPasswordHandler = async (req: Request, res: Response) => {
-  const { emailOrPhone, channel } = req.body;
-  if (!emailOrPhone) return res.status(400).json({ error: 'emailOrPhone required' });
-
-  // Find user by email or phone
-  const user = await prisma.user.findFirst({ where: { OR: [{ email: emailOrPhone }, { phone: emailOrPhone }] } });
-  if (!user) return res.status(200).json({ success: true }); // don't reveal user existence
-
   try {
-    await createAndSendOtp(user.id, channel === 'sms' ? 'sms' : 'email');
-    return res.json({ success: true });
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (!user || !user.isActive) return res.status(401).json({ error: 'Invalid credentials' });
+
+    const ok = await bcrypt.compare(password, user.passwordHash);
+    if (!ok) return res.status(401).json({ error: 'Invalid credentials' });
+
+    // create JWT
+    const jwt = (await import('../utils/jwt')).signJwt({ userId: user.id, role: user.role, universityId: user.universityId });
+
+    return res.json({ token: jwt, user: { id: user.id, email: user.email, role: user.role, universityId: user.universityId } });
   } catch (err) {
     console.error(err);
-    return res.status(500).json({ error: 'failed to send otp' });
+    return res.status(500).json({ error: 'Internal server error' });
   }
 };
 
+// Forgot password -> create OTP and send
+export const forgotPasswordHandler = async (req: Request, res: Response) => {
+  const { emailOrPhone, channel } = req.body; // channel: email|sms
+  if (!emailOrPhone) return res.status(400).json({ error: 'emailOrPhone required' });
+
+  try {
+    const user = await prisma.user.findFirst({ where: { OR: [{ email: emailOrPhone }, { phone: emailOrPhone }] } });
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    // generate 6-digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otpHash = crypto.createHash('sha256').update(otp).digest('hex');
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
+    await prisma.passwordResetOtp.create({ data: { userId: user.id, otpHash, channel: channel || 'email', expiresAt } });
+
+    const contact = channel === 'sms' ? user.phone : user.email;
+    if (contact) {
+      await sendNotificationToContact({ to: contact, subject: 'Password reset OTP', text: `Your OTP is: ${otp}. It expires in 10 minutes.` });
+    }
+
+    await prisma.auditLog.create({ data: { userId: user.id, action: 'request_password_reset', resourceType: 'user', resourceId: user.id } });
+
+    return res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+// Reset password using OTP
 export const resetPasswordHandler = async (req: Request, res: Response) => {
-  const { userId, otp, newPassword } = req.body;
-  if (!userId || !otp || !newPassword) return res.status(400).json({ error: 'userId, otp and newPassword required' });
+  const { emailOrPhone, otp, newPassword } = req.body;
+  if (!emailOrPhone || !otp || !newPassword) return res.status(400).json({ error: 'emailOrPhone, otp and newPassword required' });
 
-  const record = await prisma.passwordResetOtp.findFirst({ where: { userId, used: false }, orderBy: { createdAt: 'desc' } });
-  if (!record) return res.status(400).json({ error: 'invalid or expired otp' });
+  try {
+    const user = await prisma.user.findFirst({ where: { OR: [{ email: emailOrPhone }, { phone: emailOrPhone }] } });
+    if (!user) return res.status(404).json({ error: 'User not found' });
 
-  const now = new Date();
-  if (record.expiresAt < now) return res.status(400).json({ error: 'otp expired' });
+    const otpHash = crypto.createHash('sha256').update(otp).digest('hex');
 
-  // compare otp
-  const bcrypt = require('bcrypt');
-  const match = await bcrypt.compare(otp, record.otpHash);
-  if (!match) return res.status(400).json({ error: 'invalid otp' });
+    const pr = await prisma.passwordResetOtp.findFirst({ where: { userId: user.id, otpHash, used: false, expiresAt: { gt: new Date() } }, orderBy: { createdAt: 'desc' } });
+    if (!pr) return res.status(400).json({ error: 'Invalid or expired OTP' });
 
-  const hashed = await hashPassword(newPassword);
-  await prisma.user.update({ where: { id: userId }, data: { passwordHash: hashed } });
-  await prisma.passwordResetOtp.update({ where: { id: record.id }, data: { used: true } });
+    const passwordHash = await bcrypt.hash(newPassword, 10);
 
-  return res.json({ success: true });
+    await prisma.user.update({ where: { id: user.id }, data: { passwordHash } });
+    await prisma.passwordResetOtp.update({ where: { id: pr.id }, data: { used: true } });
+
+    await prisma.auditLog.create({ data: { userId: user.id, action: 'reset_password', resourceType: 'user', resourceId: user.id } });
+
+    return res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
 };

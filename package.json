@@ -1,6 +1,6 @@
 {
   "name": "secure-e-voting",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
@@ -14,8 +14,7 @@
     "dotenv": "^16.0.0",
     "express": "^4.18.2",
     "jsonwebtoken": "^9.0.0",
-    "nodemailer": "^6.9.3",
-    "twilio": "^4.0.0"
+    "nodemailer": "^6.9.3"
   },
   "devDependencies": {
     "prisma": "^5.0.0",
