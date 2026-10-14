@@ -1,26 +1,47 @@
 import { Request, Response } from 'express';
 import prisma from '../prismaClient';
-import bcrypt from 'bcrypt';
 
-// Create a staff user under a university (by university admin)
-export const createStaffHandler = async (req: Request, res: Response) => {
+// Register a voter (by staff or university_admin)
+export const registerVoterHandler = async (req: Request, res: Response) => {
   const { universityId } = req.params;
   const auth = (req as any).auth;
+
   try {
-    // verify auth university
-    if (auth.universityId !== universityId) return res.status(403).json({ error: 'Forbidden' });
+    if (auth.universityId !== universityId && auth.role !== 'system_owner') return res.status(403).json({ error: 'Forbidden' });
 
-    const { username, firstName, secondName, email, phone, password } = req.body;
-    if (!username || !email || !password) return res.status(400).json({ error: 'username, email and password are required' });
+    const {
+      studentRegistrationNumber,
+      nationalId,
+      firstName,
+      secondName,
+      email,
+      phone,
+      faculty,
+      college,
+      yearOfStudy
+    } = req.body;
 
-    const passwordHash = await bcrypt.hash(password, 10);
+    if (!firstName || !secondName) return res.status(400).json({ error: 'firstName and secondName required' });
 
-    const user = await prisma.user.create({ data: { universityId, role: 'staff', username, firstName, secondName, email, phone, passwordHash, isActive: true } });
+    const voter = await prisma.voter.create({ data: {
+      universityId,
+      registeredByUserId: auth.userId,
+      studentRegistrationNumber: studentRegistrationNumber || null,
+      nationalId: nationalId || null,
+      firstName,
+      secondName,
+      email: email || null,
+      phone: phone || null,
+      faculty: faculty || null,
+      college: college || null,
+      yearOfStudy: yearOfStudy || null,
+      approved: false
+    } });
 
-    await prisma.auditLog.create({ data: { userId: auth.userId, action: 'create_staff', resourceType: 'user', resourceId: user.id } });
+    await prisma.auditLog.create({ data: { userId: auth.userId, action: 'register_voter', resourceType: 'voter', resourceId: voter.id } });
 
-    return res.json({ success: true, user: { id: user.id, email: user.email, username: user.username } });
-  } catch (err: any) {
+    return res.json({ success: true, voter: { id: voter.id, firstName: voter.firstName, secondName: voter.secondName, approved: voter.approved } });
+  } catch (err) {
     console.error(err);
     return res.status(500).json({ error: 'Internal server error' });
   }

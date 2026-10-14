@@ -23,3 +23,12 @@ export const requireRole = (role: string) => {
     next();
   };
 };
+
+export const requireAnyRole = (roles: string[]) => {
+  return (req: Request, res: Response, next: NextFunction) => {
+    const auth = (req as any).auth;
+    if (!auth) return res.status(401).json({ error: 'Unauthorized' });
+    if (roles.includes(auth.role) || auth.role === 'system_owner') return next();
+    return res.status(403).json({ error: 'Forbidden' });
+  };
+};
