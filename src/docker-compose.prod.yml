@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: secure_evoting
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    networks:
+      - evote-net
+
+  pgbouncer:
+    image: edoburu/pgbouncer
+    environment:
+      DATABASE_URL: postgres://postgres:postgres@db:5432/secure_evoting
+    networks:
+      - evote-net
+    depends_on:
+      - db
+
+  app:
+    build: .
+    environment:
+      DATABASE_URL: postgres://postgres:postgres@db:5432/secure_evoting
+      JWT_SECRET: ${JWT_SECRET}
+      SYSTEM_OWNER_EMAIL: info.alrine@gmail.com
+      SYSTEM_OWNER_PASSWORD: alrine@26
+    depends_on:
+      - pgbouncer
+    ports:
+      - '4000:4000'
+    networks:
+      - evote-net
+
+volumes:
+  db_data:
+
+networks:
+  evote-net:
