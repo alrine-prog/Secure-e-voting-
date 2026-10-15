@@ -13,7 +13,7 @@ export const listPendingUniversitiesHandler = async (req: Request, res: Response
 };
 
 export const approveUniversityHandler = async (req: Request, res: Response) => {
-  const { universityId } = req.params;
+  const universityId = req.params.universityId as string;
   const adminUserId = (req as any).auth?.userId || null;
 
   try {
@@ -45,7 +45,7 @@ export const approveUniversityHandler = async (req: Request, res: Response) => {
 };
 
 export const rejectUniversityHandler = async (req: Request, res: Response) => {
-  const { universityId } = req.params;
+  const universityId = req.params.universityId as string;
   const { reason } = req.body;
   const adminUserId = (req as any).auth?.userId || null;
 
@@ -74,7 +74,7 @@ export const rejectUniversityHandler = async (req: Request, res: Response) => {
 };
 
 export const getUniversitySummaryHandler = async (req: Request, res: Response) => {
-  const { universityId } = req.params;
+  const universityId = req.params.universityId as string;
 
   try {
     const totalVoters = await prisma.voter.count({ where: { universityId } });
