@@ -3,7 +3,7 @@ import prisma from '../prismaClient';
 import bcrypt from 'bcrypt';
 
 export const createStaffHandler = async (req: Request, res: Response) => {
-  const { universityId } = req.params;
+  const universityId = req.params.universityId as string;
   const auth = (req as any).auth;
 
   try {
@@ -53,7 +53,7 @@ export const createStaffHandler = async (req: Request, res: Response) => {
 };
 
 export const registerVoterHandler = async (req: Request, res: Response) => {
-  const { universityId } = req.params;
+  const universityId = req.params.universityId as string;
   const auth = (req as any).auth;
 
   try {
