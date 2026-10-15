@@ -1,6 +1,6 @@
 {
   "name": "secure-e-voting",
-  "version": "0.3.0",
+  "version": "0.1.0",
   "private": true,
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
