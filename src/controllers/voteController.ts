@@ -11,7 +11,7 @@ const hashToken = async (token: string) => {
 
 // Issue tokens for all approved voters in the university for this election
 export const issueTokensHandler = async (req: Request, res: Response) => {
-  const { electionId } = req.params;
+  const electionId = req.params.electionId as string;
   const auth = (req as any).auth;
   const universityId = auth?.universityId;
 
@@ -46,7 +46,7 @@ export const issueTokensHandler = async (req: Request, res: Response) => {
 
 // Cast vote using token; anonymous (do not link to voter)
 export const castVoteHandler = async (req: Request, res: Response) => {
-  const { electionId } = req.params;
+  const electionId = req.params.electionId as string;
   const { token, candidate } = req.body;
   if (!token || !candidate) return res.status(400).json({ error: 'token and candidate required' });
 
@@ -58,25 +58,4 @@ export const castVoteHandler = async (req: Request, res: Response) => {
   const tokens = await prisma.voteToken.findMany({ where: { electionId, used: false } });
 
   let matched: any = null;
-  for (const t of tokens) {
-    const ok = await bcrypt.compare(token, t.tokenHash);
-    if (ok) {
-      matched = t;
-      break;
-    }
-  }
-
-  if (!matched) return res.status(400).json({ error: 'invalid or used token' });
-
-  // Ensure voter is approved
-  const voter = await prisma.voter.findUnique({ where: { id: matched.voterId } });
-  if (!voter || !voter.approved) return res.status(403).json({ error: 'voter not approved' });
-
-  // Atomically mark token used and create vote
-  const updateRes = await prisma.voteToken.updateMany({ where: { id: matched.id, used: false }, data: { used: true, usedAt: new Date() } });
-  if (updateRes.count === 0) return res.status(400).json({ error: 'token already used' });
-
-  await prisma.vote.create({ data: { electionId, candidate, tokenHash: matched.tokenHash } });
-
-  return res.json({ success: true });
-};
+  for (const t of tokens
