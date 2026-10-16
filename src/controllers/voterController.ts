@@ -4,7 +4,8 @@ import { sendNotificationToContact } from '../services/notificationService';
 
 // Approve a voter and send them a notification
 export const approveVoterHandler = async (req: Request, res: Response) => {
-  const { universityId, voterId } = req.params;
+  const universityId = req.params.universityId as string;
+  const voterId = req.params.voterId as string;
   const adminUserId = (req as any).auth?.userId || 'unknown';
 
   try {
@@ -38,7 +39,8 @@ export const approveVoterHandler = async (req: Request, res: Response) => {
 
 // Notify all approved voters for a given election
 export const notifyApprovedVotersHandler = async (req: Request, res: Response) => {
-  const { universityId, electionId } = req.params;
+  const universityId = req.params.universityId as string;
+  const electionId = req.params.electionId as string;
   const { subject, message, channel } = req.body; // channel optional: 'email' or 'sms' or 'both'
   const adminUserId = (req as any).auth?.userId || 'unknown';
 
