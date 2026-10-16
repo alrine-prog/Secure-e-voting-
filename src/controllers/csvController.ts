@@ -9,7 +9,7 @@ const upload = multer({ dest: '/tmp' });
 export const uploadVotersCsvHandler = [
   upload.single('file'),
   async (req: Request, res: Response) => {
-    const { universityId } = req.query.universityId as Strings | undefined;
+    const universityId = (req.query.universityId as string) || (req.params.universityId as string);
     const auth = (req as any).auth;
 
     try {
