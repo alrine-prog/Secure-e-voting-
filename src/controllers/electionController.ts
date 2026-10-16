@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import prisma from '../prismaClient';
 
 export const createElectionHandler = async (req: Request, res: Response) => {
-  const { universityId } = req.params;
+  const universityId = req.params.universityId as string;
   const auth = (req as any).auth;
   const { title, description, startAt, endAt } = req.body;
 
@@ -45,7 +45,7 @@ export const createElectionHandler = async (req: Request, res: Response) => {
 };
 
 export const addCandidateHandler = async (req: Request, res: Response) => {
-  const { electionId } = req.params;
+  const electionId = req.params.electionId as string;
   const { name, description } = req.body;
   const auth = (req as any).auth;
 
@@ -74,7 +74,7 @@ export const addCandidateHandler = async (req: Request, res: Response) => {
 };
 
 export const listElectionsHandler = async (req: Request, res: Response) => {
-  const { universityId } = req.params;
+  const universityId = req.params.universityId as string;
 
   try {
     const elections = await prisma.election.findMany({
@@ -89,7 +89,7 @@ export const listElectionsHandler = async (req: Request, res: Response) => {
 };
 
 export const getResultsHandler = async (req: Request, res: Response) => {
-  const { electionId } = req.params;
+  const electionId = req.params.electionId as string;
 
   try {
     const election = await prisma.election.findUnique({
@@ -111,7 +111,7 @@ export const getResultsHandler = async (req: Request, res: Response) => {
         candidateId: candidate.id,
         name: candidate.name,
         description: candidate.description,
-        votes: voteEntry ? voteEntry._count.candidate : 0
+        votes: voteEntry?._count?.candidate ?? 0
       };
     });
 
