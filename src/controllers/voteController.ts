@@ -31,16 +31,23 @@ export const issueTokensHandler = async (req: Request, res: Response) => {
     const tokenHash = await hashToken(token);
     try {
       await prisma.voteToken.create({ data: { voterId: v.id, electionId, tokenHash } });
-      // In a real system, you'd send the plaintext token to the voter via secure channel
+      // In a real system, send the plaintext token to the voter via a secure channel
       issued.push({ voterId: v.id, token });
     } catch (err) {
       console.error('token issue error', err);
     }
   }
 
-  await prisma.auditLog.create({ data: { userId: auth.userId, action: 'issue_tokens', resourceType: 'election', resourceId: electionId, details: { count: issued.length } as any } });
+  await prisma.auditLog.create({
+    data: {
+      userId: auth.userId,
+      action: 'issue_tokens',
+      resourceType: 'election',
+      resourceId: electionId,
+      details: { count: issued.length } as any
+    }
+  });
 
-  // WARNING: Returning plaintext tokens here is for demo only. In production, don't return them in API responses.
   return res.json({ success: true, issued });
 };
 
@@ -54,8 +61,32 @@ export const castVoteHandler = async (req: Request, res: Response) => {
   const election = await prisma.election.findUnique({ where: { id: electionId } });
   if (!election) return res.status(404).json({ error: 'election not found' });
 
-  // Hash compare token against stored token hashes; since we used bcrypt-like hash, need to scan candidates
+  // Hash compare token against stored token hashes
   const tokens = await prisma.voteToken.findMany({ where: { electionId, used: false } });
 
   let matched: any = null;
-  for (const t of tokens
+  for (const t of tokens) {
+    const ok = await bcrypt.compare(token, t.tokenHash);
+    if (ok) {
+      matched = t;
+      break;
+    }
+  }
+
+  if (!matched) return res.status(400).json({ error: 'invalid or used token' });
+
+  // Ensure voter is approved
+  const voter = await prisma.voter.findUnique({ where: { id: matched.voterId } });
+  if (!voter || !voter.approved) return res.status(403).json({ error: 'voter not approved' });
+
+  // Atomically mark token used and create vote
+  const updateRes = await prisma.voteToken.updateMany({
+    where: { id: matched.id, used: false },
+    data: { used: true, usedAt: new Date() }
+  });
+  if (updateRes.count === 0) return res.status(400).json({ error: 'token already used' });
+
+  await prisma.vote.create({ data: { electionId, candidate, tokenHash: matched.tokenHash } });
+
+  return res.json({ success: true });
+};
