@@ -58,7 +58,7 @@ export const addCandidateHandler = async (req: Request, res: Response) => {
       return res.status(403).json({ error: 'Forbidden' });
     }
 
-    const candidate = await prisma.candidate.create({
+    const candidate = await (prisma as any).candidate.create({
       data: { electionId, name, description: description || null }
     });
 
@@ -78,10 +78,20 @@ export const listElectionsHandler = async (req: Request, res: Response) => {
 
   try {
     const elections = await prisma.election.findMany({
-      where: { universityId },
-      include: { candidates: true }
+      where: { universityId }
     });
-    return res.json({ success: true, elections });
+
+    // Fetch candidates separately to avoid relation name mismatches
+    const candidates = await (prisma as any).candidate.findMany({
+      where: { electionId: { in: elections.map(e => e.id) } }
+    });
+
+    const results = elections.map(e => ({
+      ...e,
+      candidates: candidates.filter((c: any) => c.electionId === e.id)
+    }));
+
+    return res.json({ success: true, elections: results });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ error: 'Internal server error' });
@@ -93,11 +103,14 @@ export const getResultsHandler = async (req: Request, res: Response) => {
 
   try {
     const election = await prisma.election.findUnique({
-      where: { id: electionId },
-      include: { candidates: true }
+      where: { id: electionId }
     });
 
     if (!election) return res.status(404).json({ error: 'Election not found' });
+
+    const candidates = await (prisma as any).candidate.findMany({
+      where: { electionId }
+    });
 
     const votes = await prisma.vote.groupBy({
       by: ['candidate'],
@@ -105,7 +118,7 @@ export const getResultsHandler = async (req: Request, res: Response) => {
       _count: { candidate: true }
     });
 
-    const results = election.candidates.map((candidate) => {
+    const results = candidates.map((candidate: any) => {
       const voteEntry = votes.find((v) => v.candidate === candidate.name);
       return {
         candidateId: candidate.id,
