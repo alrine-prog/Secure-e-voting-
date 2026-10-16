@@ -4,7 +4,7 @@ import crypto from 'crypto';
 
 // Cast vote using token (anonymous) - updated to verify voter approved status
 export const castVoteHandler = async (req: Request, res: Response) => {
-  const { electionId } = req.params;
+  const electionId = req.params.electionId as string;
   const { token, candidate } = req.body;
   if (!token || !candidate) return res.status(400).json({ error: 'token and candidate are required' });
 
@@ -42,5 +42,53 @@ export const castVoteHandler = async (req: Request, res: Response) => {
   } catch (err: any) {
     console.error(err);
     return res.status(400).json({ error: err.message || 'Failed to cast vote' });
+  }
+};
+
+// Exported handler required by src/routes/voting.ts
+export const issueTokensHandler = async (req: Request, res: Response) => {
+  const electionId = req.params.electionId as string;
+  const auth = (req as any).auth;
+
+  try {
+    if (!auth) return res.status(401).json({ error: 'Unauthorized' });
+
+    const election = await prisma.election.findUnique({ where: { id: electionId } });
+    if (!election) return res.status(404).json({ error: 'Election not found' });
+
+    // Fetch approved voters for the election's university
+    const voters = await prisma.voter.findMany({
+      where: { universityId: election.universityId, approved: true }
+    });
+
+    const tokensCreated = [];
+
+    for (const voter of voters) {
+      // Check if token already exists for voter in this election
+      const existingToken = await prisma.voteToken.findFirst({
+        where: { electionId, voterId: voter.id }
+      });
+
+      if (!existingToken) {
+        const rawToken = crypto.randomBytes(16).toString('hex');
+        const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex');
+
+        await prisma.voteToken.create({
+          data: {
+            electionId,
+            voterId: voter.id,
+            tokenHash,
+            used: false
+          }
+        });
+
+        tokensCreated.push({ voterId: voter.id, token: rawToken });
+      }
+    }
+
+    return res.json({ success: true, count: tokensCreated.length });
+  } catch (err: any) {
+    console.error(err);
+    return res.status(500).json({ error: 'Failed to issue tokens' });
   }
 };
