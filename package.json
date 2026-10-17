@@ -12,7 +12,7 @@
   "allowScripts": {
     "@prisma/client": true,
     "prisma": true,
-    "package-name":true 
+    "package-name":true, 
     "bcrypt": true
   },
   "dependencies": {
