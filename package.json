@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
-    "build": "npx prisma generate && npx prisma db push && cd frontend && npm ci && npm run build && cd .. && tsc",
+    "build": "npm install && npx prisma generate && npx prisma db push && cd frontend && npm ci && npm run build && cd .. && tsc",
     "start": "node dist/server.js",
     "prisma": "prisma",
     "frontend": "cd frontend && npm run dev"
