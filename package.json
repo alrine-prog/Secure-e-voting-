@@ -37,7 +37,7 @@
   "@prisma/client": true,
   "prisma": true,
   "bcrypt": true
-  }
+  },
 
   "devDependencies": {
     "@types/cookie-parser": "^1.4.x",
