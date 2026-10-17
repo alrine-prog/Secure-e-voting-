@@ -6,6 +6,7 @@ import rateLimit from 'express-rate-limit';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import path from 'path';
+import fs from 'fs';
 import adminRouter from './routes/admin';
 import authRouter from './routes/auth';
 import universityRouter from './routes/university';
@@ -31,7 +32,7 @@ app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 200 }));
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
 app.use(cors({ origin: FRONTEND_URL, credentials: true }));
 
-// API Endpoints
+// --- API Endpoints ---
 app.use('/auth', authRouter);
 app.use('/universities', universityRouter);
 app.use('/admin', adminRouter);
@@ -43,36 +44,70 @@ setupSwagger(app);
 
 app.get('/health', (_req, res) => res.json({ status: 'ok' }));
 
-// --- Serve Frontend Static Build Assets ---
-const frontendBuildPath = path.join(__dirname, '../frontend/out'); // Use '../frontend/dist' or '../frontend/build' if using Vite or Create-React-App
+// --- Locate Root Level Frontend Directory ---
+// Dynamically locates repo root whether server.js ends up in dist/ or dist/src/
+const getFrontendBuildPath = (): string => {
+  const directRootPath = path.resolve(__dirname, '../frontend/out');
+  const nestedRootPath = path.resolve(__dirname, '../../frontend/out');
 
-app.use(express.static(frontendBuildPath));
+  if (fs.existsSync(directRootPath)) {
+    return directRootPath;
+  }
+  return nestedRootPath;
+};
 
-// Fallback GET / to index.html or welcome payload if frontend build does not exist
-app.get('*', (req, res) => {
-  res.sendFile(path.join(frontendBuildPath, 'index.html'), (err) => {
-    if (err) {
-      res.json({
-        message: 'Secure E-Voting API Server is running live!',
-        status: 'online',
-        endpoints: {
-          swagger: '/api-docs',
-          health: '/health'
-        }
-      });
+const frontendBuildPath = getFrontendBuildPath();
+
+// --- Serve Frontend Static Assets ---
+if (fs.existsSync(frontendBuildPath)) {
+  app.use(express.static(frontendBuildPath));
+
+  app.get('*', (req, res, next) => {
+    // Let unhandled API routes pass through to 404/error handlers
+    if (
+      req.path.startsWith('/auth') ||
+      req.path.startsWith('/admin') ||
+      req.path.startsWith('/universities') ||
+      req.path.startsWith('/staff') ||
+      req.path.startsWith('/elections') ||
+      req.path.startsWith('/api-docs') ||
+      req.path.startsWith('/health')
+    ) {
+      return next();
     }
-  });
-});
 
+    const indexPath = path.join(frontendBuildPath, 'index.html');
+    if (fs.existsSync(indexPath)) {
+      return res.sendFile(indexPath);
+    }
+    next();
+  });
+} else {
+  // API Fallback message if static frontend export wasn't generated
+  app.get('/', (_req, res) => {
+    res.json({
+      message: 'Secure E-Voting API Server is running live!',
+      status: 'online',
+      endpoints: {
+        swagger: '/api-docs',
+        health: '/health'
+      }
+    });
+  });
+}
+
+// Global error handler
 app.use(errorHandler);
 
 const port = Number(process.env.PORT || 4000);
 
-seedSystemOwner().then(() => {
-  app.listen(port, () => {
-    console.log(`Server running on http://localhost:${port}`);
+seedSystemOwner()
+  .then(() => {
+    app.listen(port, () => {
+      console.log(`Server running on port ${port}`);
+    });
+  })
+  .catch((err) => {
+    console.error('Failed to seed system owner:', err);
+    process.exit(1);
   });
-}).catch((err) => {
-  console.error('Failed to seed system owner', err);
-  process.exit(1);
-});
