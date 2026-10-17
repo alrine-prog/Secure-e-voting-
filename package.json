@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
-    "build": "npx prisma db push && cd frontend && npm ci && npm run export-and-build && cd .. && tsc", 
+    "build": "npx prisma generate && npx prisma db push && cd frontend && npm ci && npm run build && cd .. && tsc",
     "start": "node dist/server.js",
     "prisma": "prisma",
     "frontend": "cd frontend && npm run dev"
@@ -15,8 +15,6 @@
     "axios": "^1.7.2",
     "bcrypt": "^5.1.0",
     "cookie-parser": "^1.4.x",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
     "cors": "^2.8.5",
     "csv-parse": "^5.3.6",
     "dotenv": "^16.0.0",
@@ -29,6 +27,8 @@
     "multer": "^1.4.x",
     "nodemailer": "^6.9.3",
     "pino": "^9.0.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
     "swagger-jsdoc": "^6.3.0",
     "swagger-ui-express": "^5.0.1",
     "twilio": "^5.2.2"
@@ -40,12 +40,12 @@
     "@types/jsonwebtoken": "^9.0.0",
     "@types/multer": "^1.4.x",
     "@types/node": "^20.14.12",
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
     "@types/swagger-jsdoc": "^6.0.4",
     "@types/swagger-ui-express": "^4.1.x",
     "prisma": "^5.0.0",
     "ts-node-dev": "^2.0.0",
-    "typescript": "^5.0.0",
-    "@types/react": "^18.2.0",
-    "@types/react-dom": "^18.2.0"
+    "typescript": "^5.0.0"
   }
 }
