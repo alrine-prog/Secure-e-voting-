@@ -3,10 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "prisma": "prisma"
+  "dev": "npm --prefix frontend run dev",
+  "build": "npm --prefix frontend run build",
+  "start": "npm --prefix frontend run start",
+  "prisma": "prisma"
   },
   "allowScripts": {
     "@prisma/client": true,
