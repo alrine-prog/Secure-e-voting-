@@ -33,6 +33,12 @@
     "swagger-ui-express": "^5.0.1",
     "twilio": "^5.2.2"
   },
+  "allowScripts": {
+  "@prisma/client": true,
+  "prisma": true,
+  "bcrypt": true
+  }
+
   "devDependencies": {
     "@types/cookie-parser": "^1.4.x",
     "@types/cors": "^2.8.5",
