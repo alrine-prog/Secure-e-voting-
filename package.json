@@ -3,12 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
-    "build": "npm install && npx prisma generate && npx prisma db push && cd frontend && npm run build && cd .. && tsc",
-    "start": "node dist/server.js",
+    "dev": "next dev",
+    "build": "npm build",
     "start": "next start",
-    "prisma": "prisma",
-    "frontend": "cd frontend && npm run dev"
+    "prisma": "prisma"
   },
   "allowScripts": {
     "@prisma/client": true,
