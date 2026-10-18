@@ -13,10 +13,10 @@ import universityRouter from './routes/university';
 import staffRouter from './routes/staff';
 import electionsRouter from './routes/elections';
 import csvRouter from './routes/csv';
+import supportRouter from './routes/support';
 import { seedSystemOwner } from './seed';
 import { errorHandler } from './middleware/errorHandler';
 import { setupSwagger } from './swagger';
-import supportRouter from './routes/support';
 
 dotenv.config();
 
@@ -39,8 +39,8 @@ app.use('/universities', universityRouter);
 app.use('/admin', adminRouter);
 app.use('/staff', staffRouter);
 app.use('/staff', csvRouter);
-app.use('/elections', electionsRouter);
 app.use('/support', supportRouter);
+app.use('/elections', electionsRouter);
 
 setupSwagger(app);
 
@@ -73,7 +73,8 @@ if (fs.existsSync(frontendBuildPath)) {
       req.path.startsWith('/staff') ||
       req.path.startsWith('/elections') ||
       req.path.startsWith('/api-docs') ||
-      req.path.startsWith('/health')
+      req.path.startsWith('/health') ||
+      req.path.startsWith('/support')
     ) {
       return next();
     }
