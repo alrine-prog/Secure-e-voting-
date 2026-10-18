@@ -2,12 +2,24 @@ import { useState } from 'react';
 import Nav from '../components/Nav';
 import { apiFetch } from '../lib/api';
 import Head from 'next/head";
+import RedisStore from 'rate-limit-redis';
+import Redis from 'ioredis';
   // inside component render, add:
 <Head>
   {process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY && (
     <script src={`https://www.google.com/recaptcha/api.js?render=${process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY}`} />
   )}
 </Head>
+// inside component render, add:
+
+
+// example (not full file) using rate-limit-redis
+const redisClient = new Redis(process.env.REDIS_URL);
+const limiter = rateLimit({
+  store: new RedisStore({ sendCommand: (...args) => redisClient.call(...args) }),
+  windowMs: 60 * 60 * 1000,
+  max: 100
+});
 
 export default function RegisterUniversityPage() {
   const [name, setName] = useState('');
