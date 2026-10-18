@@ -1,15 +1,44 @@
-# Updates: Auth & Voting Flow
+# Secure E-Voting
 
-This commit adds:
-- JWT-based authentication (login / token issuance)
-- Seed routine to create default system owner from env or provided defaults
-- University registration endpoint (creates pending university and inactive university_admin user)
-- Staff creation endpoint (by university_admin)
-- Voter token issuance for elections (admin action)
-- Anonymous vote casting using single-use tokens (transactional)
-- Password reset via OTP (email/sms) endpoints
+Secure E-Voting is a secure online voting platform for universities and institutions. It supports:
+- University registration and approval workflow
+- University admin login and role-based access
+- Staff management and voter registration
+- Election creation, opening, closing, and results viewing
+- Single-use voting tokens for secure vote casting
+- Audit logs, notification support, and system approvals
 
-Quick notes:
-- Configure .env: set DATABASE_URL, JWT_SECRET, SYSTEM_OWNER_EMAIL, SYSTEM_OWNER_PASSWORD, SMTP_* for email sending
-- To call protected endpoints use: Authorization: Bearer <token>
-- Admin endpoints require user role checks. Use the seeded system owner to approve universities (future endpoint to add).
+Project structure
+- frontend/ — Next.js frontend
+- src/ — Express API server
+- prisma/ — Prisma schema and migrations
+- docs/ — user/admin/developer documentation
+
+Quick start
+1. Copy environment variables:
+   - cp .env.example .env
+   - or create your own .env with DATABASE_URL, JWT_SECRET, FRONTEND_URL, and SMTP/SendGrid values
+
+2. Install dependencies:
+   - npm install
+   - cd frontend && npm install && cd ..
+
+3. Start backend:
+   - node src/server.js
+
+4. Start frontend:
+   - cd frontend
+   - npm run dev
+
+5. Open:
+   - http://localhost:3000
+
+Default system owner
+The server seeds a system owner account automatically if environment variables are set:
+- SYSTEM_OWNER_EMAIL
+- SYSTEM_OWNER_PASSWORD
+
+Example:
+```bash
+SYSTEM_OWNER_EMAIL=admin@example.com
+SYSTEM_OWNER_PASSWORD=StrongPassword123!
