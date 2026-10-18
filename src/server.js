@@ -16,6 +16,7 @@ import csvRouter from './routes/csv';
 import { seedSystemOwner } from './seed';
 import { errorHandler } from './middleware/errorHandler';
 import { setupSwagger } from './swagger';
+import supportRouter from './routes/support';
 
 dotenv.config();
 
@@ -39,6 +40,7 @@ app.use('/admin', adminRouter);
 app.use('/staff', staffRouter);
 app.use('/staff', csvRouter);
 app.use('/elections', electionsRouter);
+app.use('/support', supportRouter);
 
 setupSwagger(app);
 
