@@ -2,13 +2,38 @@ import { useState } from 'react';
 import Nav from '../components/Nav';
 import { apiFetch } from '../lib/api';
 import Head from 'next/head';
+// example (not full file) using rate-limit-redis
+import RedisStore from 'rate-limit-redis';
+import Redis from 'ioredis';
 // inside component render, add:
 <Head>
   {process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY && (
     <script src={`https://www.google.com/recaptcha/api.js?render=${process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY}`} />
   )}
 </Head>
+// example (not full file) using rate-limit-redisconst siteKey = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
 
+const submit = async (e) => {
+  e?.preventDefault();
+  // ... validation ...
+  setStatus('sending');
+
+  let recaptchaToken = undefined;
+  if (siteKey && (window as any).grecaptcha) {
+    recaptchaToken = await (window as any).grecaptcha.execute(siteKey, { action: 'contact' });
+  }
+
+  const res = await apiFetch('/support', {
+    method: 'POST',
+    body: JSON.stringify({ name, email, phone, subject, message, recaptchaToken })
+  });
+
+const redisClient = new Redis(process.env.REDIS_URL);
+const limiter = rateLimit({
+  store: new RedisStore({ sendCommand: (...args) => redisClient.call(...args) }),
+  windowMs: 60 * 60 * 1000,
+  max: 100
+});
 export default function ContactPage() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
