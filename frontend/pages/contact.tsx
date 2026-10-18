@@ -1,6 +1,13 @@
 import { useState } from 'react';
 import Nav from '../components/Nav';
 import { apiFetch } from '../lib/api';
+import Head from 'next/head';
+// inside component render, add:
+<Head>
+  {process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY && (
+    <script src={`https://www.google.com/recaptcha/api.js?render=${process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY}`} />
+  )}
+</Head>
 
 export default function ContactPage() {
   const [name, setName] = useState('');
