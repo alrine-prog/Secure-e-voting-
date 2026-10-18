@@ -11,7 +11,22 @@ import Redis from 'ioredis';
   )}
 </Head>
 // inside component render, add:
+const siteKey = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
 
+const submit = async (e) => {
+  e?.preventDefault();
+  // ... validation ...
+  setStatus('sending');
+
+  let recaptchaToken = undefined;
+  if (siteKey && (window as any).grecaptcha) {
+    recaptchaToken = await (window as any).grecaptcha.execute(siteKey, { action: 'contact' });
+  }
+
+  const res = await apiFetch('/support', {
+    method: 'POST',
+    body: JSON.stringify({ name, email, phone, subject, message, recaptchaToken })
+  });
 
 // example (not full file) using rate-limit-redis
 const redisClient = new Redis(process.env.REDIS_URL);
