@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import Link from 'next/link';
 import Nav from '../../components/Nav';
 import { apiFetch } from '../../lib/api';
 
@@ -22,15 +23,29 @@ export default function StaffDashboard() {
     <div className="container">
       <Nav />
       <h2>Staff Dashboard</h2>
-      <p>Register a voter</p>
-      <form onSubmit={register}>
-        <input className="input" placeholder="First name" value={firstName} onChange={(e) => setFirstName(e.target.value)} />
-        <input className="input" placeholder="Second name" value={secondName} onChange={(e) => setSecondName(e.target.value)} />
-        <button type="submit">Register</button>
-      </form>
-      {message && <p>{message}</p>}
-      <hr />
-      <p>CSV import is available in the admin UI (upload a CSV file with columns: firstName,secondName,email,phone,...)</p>
+      <p>Welcome, Staff — register voters and manage participant lists.</p>
+
+      <section style={{ marginTop: 18 }}>
+        <form onSubmit={register}>
+          <label>First name</label>
+          <input className="input" placeholder="First name" value={firstName} onChange={(e) => setFirstName(e.target.value)} />
+          <label>Second name</label>
+          <input className="input" placeholder="Second name" value={secondName} onChange={(e) => setSecondName(e.target.value)} />
+          <div style={{ marginTop: 8 }}>
+            <button type="submit">Register voter</button>
+          </div>
+        </form>
+
+        {message && <p style={{ marginTop: 12 }}>{message}</p>}
+      </section>
+
+      <section style={{ marginTop: 28 }}>
+        <h3>Staff Tools</h3>
+        <ul>
+          <li><Link href="/staff/import"><a>CSV Import</a></Link> — bulk-upload eligible voters</li>
+          <li><Link href="/staff/list"><a>Voter list</a></Link> — view registered voters</li>
+        </ul>
+      </section>
     </div>
   );
 }
