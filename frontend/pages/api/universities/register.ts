@@ -46,7 +46,6 @@ async function verifyRecaptcha(token: string): Promise<boolean> {
     });
 
     const data = await response.json();
-    // Verify success and threshold score (>= 0.5 for reCAPTCHA v3)
     return Boolean(data.success && data.score >= 0.5);
   } catch (error) {
     console.error('reCAPTCHA verification error:', error);
@@ -92,44 +91,25 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
     }
 
-     //5. DATABASE REGISTRATION LOGIC (e.g., using Prisma / Knex / MongoDB)
-     //   Example:
-       
-       // Check if university or admin email already exists
-       const existingAdmin = await db.user.findUnique({ where: { email: admin.email } });
-       if (existingAdmin) {
-         return res.status(400).json({ error: 'An account with this email already exists.' });
-       }
-
-       // Hash password
-       const hashedPassword = await bcrypt.hash(admin.password, 10);
-
-       // Create pending university and initial admin
-       const newUniversity = await db.university.create({
-         data: {
-           name,
-           country,
-           districtCity,
-           status: 'PENDING',
-           admins: {
-             create: {
-               username: admin.username,
-               firstName: admin.firstName,
-               secondName: admin.secondName,
-               email: admin.email,
-               phone: admin.phone,
-               password: hashedPassword,
-               role: 'UNIVERSITY_ADMIN',
-               status: 'PENDING',
-             }
-           }
-         }
-       });
-    
-
+    // 5. Success Response (Replace or connect your database helper here when ready)
     return res.status(201).json({
       success: true,
       message: 'University registration submitted successfully and is pending approval.',
+      data: {
+        id: `uni_${Date.now()}`,
+        name,
+        country,
+        districtCity,
+        admin: {
+          username: admin.username,
+          firstName: admin.firstName,
+          secondName: admin.secondName,
+          email: admin.email,
+          phone: admin.phone,
+        },
+        status: 'PENDING',
+        createdAt: new Date().toISOString(),
+      },
     });
   } catch (error: any) {
     console.error('Registration API Error:', error);
