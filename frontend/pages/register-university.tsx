@@ -5,7 +5,6 @@ import { apiFetch } from '../lib/api';
 
 const SITE_KEY = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
 
-// Global type declaration for Google reCAPTCHA v3
 declare global {
   interface Window {
     grecaptcha?: {
@@ -20,7 +19,6 @@ export default function RegisterUniversityPage() {
   const [country, setCountry] = useState('');
   const [districtCity, setDistrictCity] = useState('');
 
-  // Admin fields
   const [username, setUsername] = useState('');
   const [firstName, setFirstName] = useState('');
   const [secondName, setSecondName] = useState('');
@@ -43,7 +41,6 @@ export default function RegisterUniversityPage() {
 
     setStatus('submitting');
 
-    // Generate reCAPTCHA v3 token if script and key exist
     let recaptchaToken: string | undefined = undefined;
     if (SITE_KEY && window.grecaptcha) {
       try {
@@ -84,7 +81,6 @@ export default function RegisterUniversityPage() {
       setMessage('Registration submitted — your university will be reviewed by the system owner.');
       setStatus('success');
 
-      // Reset form state
       setName('');
       setCountry('');
       setDistrictCity('');
@@ -101,8 +97,149 @@ export default function RegisterUniversityPage() {
   };
 
   return (
-    <div> className="container"<\div>
+    <div className="container">
       <Head>
         <title>Register University - Secure-e-voting</title>
         {SITE_KEY && (
-          <script></script>
+          <script
+            src={`https://www.google.com/recaptcha/api.js?render=${SITE_KEY}`}
+            async
+            defer
+          />
+        )}
+      </Head>
+
+      <Nav />
+      <h2>Register Your University</h2>
+      <p>
+        Fill this form to create a new university entry in the system. The initial university admin account will be
+        created in a pending state and activated once the system owner approves the university.
+      </p>
+
+      <form onSubmit={submit} style={{ marginTop: 18 }}>
+        <label htmlFor="uni-name">University name *</label>
+        <input
+          id="uni-name"
+          className="input"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          required
+        />
+
+        <label htmlFor="uni-country">Country *</label>
+        <input
+          id="uni-country"
+          className="input"
+          value={country}
+          onChange={(e) => setCountry(e.target.value)}
+          required
+        />
+
+        <label htmlFor="uni-district">District / City *</label>
+        <input
+          id="uni-district"
+          className="input"
+          value={districtCity}
+          onChange={(e) => setDistrictCity(e.target.value)}
+          required
+        />
+
+        <hr style={{ margin: '18px 0' }} />
+
+        <h3>Initial University Admin</h3>
+
+        <label htmlFor="admin-username">Username *</label>
+        <input
+          id="admin-username"
+          className="input"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          required
+        />
+
+        <label htmlFor="admin-firstname">First name *</label>
+        <input
+          id="admin-firstname"
+          className="input"
+          value={firstName}
+          onChange={(e) => setFirstName(e.target.value)}
+          required
+        />
+
+        <label htmlFor="admin-secondname">Second name</label>
+        <input
+          id="admin-secondname"
+          className="input"
+          value={secondName}
+          onChange={(e) => setSecondName(e.target.value)}
+        />
+
+        <label htmlFor="admin-email">Email *</label>
+        <input
+          id="admin-email"
+          className="input"
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+        />
+
+        <label htmlFor="admin-phone">Phone</label>
+        <input
+          id="admin-phone"
+          className="input"
+          value={phone}
+          onChange={(e) => setPhone(e.target.value)}
+        />
+
+        <label htmlFor="admin-password">Password *</label>
+        <input
+          id="admin-password"
+          className="input"
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+        />
+
+        {message && (
+          <p style={{ color: status === 'success' ? '#16a34a' : '#dc2626', marginTop: 12 }}>
+            {message}
+          </p>
+        )}
+
+        <div style={{ marginTop: 12 }}>
+          <button type="submit" disabled={status === 'submitting'}>
+            {status === 'submitting' ? 'Submitting…' : 'Register University'}
+          </button>
+        </div>
+      </form>
+
+      <hr style={{ marginTop: 24 }} />
+
+      <section style={{ marginTop: 8 }}>
+        <h3>Contact & Support</h3>
+        <p>
+          <strong>Email:</strong> <a href="mailto:albertjesocen@gmail.com">albertjesocen@gmail.com</a>
+        </p>
+        <p>
+          <strong>Phone:</strong> +256 785 157 237 / +256 709 813 462
+        </p>
+        <p>
+          <strong>Location:</strong> Lira City, Ayago Trading Center
+        </p>
+        <p>
+          <strong>WhatsApp:</strong>{' '}
+          <a href="https://wa.me/256785157237" target="_blank" rel="noopener noreferrer">
+            Chat on WhatsApp (+256 785 157 237)
+          </a>
+        </p>
+      </section>
+
+      <footer style={{ marginTop: 28, color: '#6b7280', fontSize: 14 }}>
+        <hr />
+        <p>Secure-e-voting is the product of Alrine Technology — all rights reserved.</p>
+      </footer>
+    </div>
+  );
+}
