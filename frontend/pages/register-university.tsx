@@ -101,8 +101,8 @@ export default function RegisterUniversityPage() {
   };
 
   return (
-    <div className="container">
+    <div> className="container"<\div>
       <Head>
         <title>Register University - Secure-e-voting</title>
         {SITE_KEY && (
-          <script
+          <script></script>
