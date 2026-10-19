@@ -49,8 +49,7 @@ export default function ContactPage() {
       });
 
       if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        setError(data?.error || 'Failed to send message');
+        setError(res.body?.error || 'Failed to send message');
         setStatus('error');
         return;
       }
@@ -86,20 +85,50 @@ export default function ContactPage() {
         <p>If you need help with Secure E‑Voting, use the form below or the contact details at the bottom.</p>
 
         <form onSubmit={submit} style={{ marginTop: 18 }}>
-          <label>Name *</label>
-          <input className="input" value={name} onChange={(e) => setName(e.target.value)} required />
+          <label htmlFor="contact-name">Name *</label>
+          <input
+            id="contact-name"
+            className="input"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            required
+          />
 
-          <label>Email *</label>
-          <input className="input" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+          <label htmlFor="contact-email">Email *</label>
+          <input
+            id="contact-email"
+            className="input"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
 
-          <label>Phone (optional)</label>
-          <input className="input" value={phone} onChange={(e) => setPhone(e.target.value)} />
+          <label htmlFor="contact-phone">Phone (optional)</label>
+          <input
+            id="contact-phone"
+            className="input"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+          />
 
-          <label>Subject</label>
-          <input className="input" value={subject} onChange={(e) => setSubject(e.target.value)} />
+          <label htmlFor="contact-subject">Subject</label>
+          <input
+            id="contact-subject"
+            className="input"
+            value={subject}
+            onChange={(e) => setSubject(e.target.value)}
+          />
 
-          <label>Message *</label>
-          <textarea className="input" rows={6} value={message} onChange={(e) => setMessage(e.target.value)} required />
+          <label htmlFor="contact-message">Message *</label>
+          <textarea
+            id="contact-message"
+            className="input"
+            rows={6}
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            required
+          />
 
           {error && <p style={{ color: '#dc2626', marginTop: 8 }}>{error}</p>}
           {status === 'sent' && (
