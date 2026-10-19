@@ -1,47 +1,16 @@
 import { useState } from 'react';
+import Head from 'next/head';
 import Nav from '../components/Nav';
 import { apiFetch } from '../lib/api';
-import Head from 'next/head";
-import RedisStore from 'rate-limit-redis';
-import Redis from 'ioredis';
-  // inside component render, add:
-<Head>
-  {process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY && (
-    <script src={`https://www.google.com/recaptcha/api.js?render=${process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY}`} />
-  )}
-</Head>
-// inside component render, add:
-const siteKey = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
 
-const submit = async (e) => {
-  e?.preventDefault();
-  // ... validation ...
-  setStatus('sending');
-
-  let recaptchaToken = undefined;
-  if (siteKey && (window as any).grecaptcha) {
-    recaptchaToken = await (window as any).grecaptcha.execute(siteKey, { action: 'contact' });
-  }
-
-  const res = await apiFetch('/support', {
-    method: 'POST',
-    body: JSON.stringify({ name, email, phone, subject, message, recaptchaToken })
-  });
-
-// example (not full file) using rate-limit-redis
-const redisClient = new Redis(process.env.REDIS_URL);
-const limiter = rateLimit({
-  store: new RedisStore({ sendCommand: (...args) => redisClient.call(...args) }),
-  windowMs: 60 * 60 * 1000,
-  max: 100
-});
+const SITE_KEY = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
 
 export default function RegisterUniversityPage() {
   const [name, setName] = useState('');
   const [country, setCountry] = useState('');
   const [districtCity, setDistrictCity] = useState('');
 
-  // admin fields
+  // Admin fields
   const [username, setUsername] = useState('');
   const [firstName, setFirstName] = useState('');
   const [secondName, setSecondName] = useState('');
@@ -49,10 +18,10 @@ export default function RegisterUniversityPage() {
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
 
-  const [status, setStatus] = useState<'idle'|'submitting'|'success'|'error'>('idle');
+  const [status, setStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
   const [message, setMessage] = useState<string | null>(null);
 
-  const submit = async (e: any) => {
+  const submit = async (e: React.FormEvent) => {
     e?.preventDefault();
     setMessage(null);
 
@@ -63,6 +32,16 @@ export default function RegisterUniversityPage() {
     }
 
     setStatus('submitting');
+
+    // Generate reCAPTCHA token if configured
+    let recaptchaToken: string | undefined = undefined;
+    if (SITE_KEY && (window as any).grecaptcha) {
+      try {
+        recaptchaToken = await (window as any).grecaptcha.execute(SITE_KEY, { action: 'register_university' });
+      } catch (err) {
+        console.error('reCAPTCHA execution failed:', err);
+      }
+    }
 
     const payload = {
       name,
@@ -75,70 +54,93 @@ export default function RegisterUniversityPage() {
         email,
         phone,
         password
-      }
+      },
+      recaptchaToken
     };
 
-    const res = await apiFetch('/universities/register', {
-      method: 'POST',
-      body: JSON.stringify(payload)
-    });
+    try {
+      const res = await apiFetch('/universities/register', {
+        method: 'POST',
+        body: JSON.stringify(payload)
+      });
 
-    if (!res.ok) {
-      setMessage(res.body?.error || 'Registration failed');
+      if (!res.ok) {
+        setMessage(res.body?.error || 'Registration failed');
+        setStatus('error');
+        return;
+      }
+
+      setMessage('Registration submitted — your university will be reviewed by the system owner.');
+      setStatus('success');
+
+      // Reset form
+      setName(''); setCountry(''); setDistrictCity('');
+      setUsername(''); setFirstName(''); setSecondName(''); setEmail(''); setPhone(''); setPassword('');
+    } catch (err) {
+      setMessage('An error occurred during registration. Please try again.');
       setStatus('error');
-      return;
     }
-
-    setMessage('Registration submitted — your university will be reviewed by the system owner.');
-    setStatus('success');
-    // clear form
-    setName(''); setCountry(''); setDistrictCity('');
-    setUsername(''); setFirstName(''); setSecondName(''); setEmail(''); setPhone(''); setPassword('');
   };
 
   return (
     <div className="container">
+      <Head>
+        <title>Register University - Secure-e-voting</title>
+        {SITE_KEY && (
+          <script
+            src={`https://www.google.com/recaptcha/api.js?render=${SITE_KEY}`}
+            async
+            defer
+          />
+        )}
+      </Head>
+
       <Nav />
       <h2>Register Your University</h2>
-      <p>Fill this form to create a new university entry in the system. The initial university admin account will be created in pending state and activated once the system owner approves the university.</p>
+      <p>
+        Fill this form to create a new university entry in the system. The initial university admin account will be
+        created in pending state and activated once the system owner approves the university.
+      </p>
 
       <form onSubmit={submit} style={{ marginTop: 18 }}>
         <label>University name *</label>
-        <input className="input" value={name} onChange={(e) => setName(e.target.value)} />
+        <input className="input" value={name} onChange={(e) => setName(e.target.value)} required />
 
         <label>Country *</label>
-        <input className="input" value={country} onChange={(e) => setCountry(e.target.value)} />
+        <input className="input" value={country} onChange={(e) => setCountry(e.target.value)} required />
 
         <label>District / City *</label>
-        <input className="input" value={districtCity} onChange={(e) => setDistrictCity(e.target.value)} />
+        <input className="input" value={districtCity} onChange={(e) => setDistrictCity(e.target.value)} required />
 
         <hr style={{ margin: '18px 0' }} />
 
         <h3>Initial University Admin</h3>
         <label>Username *</label>
-        <input className="input" value={username} onChange={(e) => setUsername(e.target.value)} />
+        <input className="input" value={username} onChange={(e) => setUsername(e.target.value)} required />
 
         <label>First name *</label>
-        <input className="input" value={firstName} onChange={(e) => setFirstName(e.target.value)} />
+        <input className="input" value={firstName} onChange={(e) => setFirstName(e.target.value)} required />
 
         <label>Second name</label>
         <input className="input" value={secondName} onChange={(e) => setSecondName(e.target.value)} />
 
         <label>Email *</label>
-        <input className="input" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+        <input className="input" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
 
         <label>Phone</label>
         <input className="input" value={phone} onChange={(e) => setPhone(e.target.value)} />
 
         <label>Password *</label>
-        <input className="input" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
+        <input className="input" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
 
         {message && (
           <p style={{ color: status === 'success' ? '#16a34a' : '#dc2626' }}>{message}</p>
         )}
 
         <div style={{ marginTop: 12 }}>
-          <button type="submit" disabled={status === 'submitting'}>{status === 'submitting' ? 'Submitting…' : 'Register University'}</button>
+          <button type="submit" disabled={status === 'submitting'}>
+            {status === 'submitting' ? 'Submitting…' : 'Register University'}
+          </button>
         </div>
       </form>
 
@@ -151,7 +153,9 @@ export default function RegisterUniversityPage() {
         <p><strong>Location:</strong> Lira City, Ayago Trading Center</p>
         <p>
           <strong>WhatsApp:</strong>{' '}
-          <a href="https://wa.me/256785157237" target="_blank" rel="noreferrer">Chat on WhatsApp (+256 785 157 237)</a>
+          <a href="https://wa.me/256785157237" target="_blank" rel="noreferrer">
+            Chat on WhatsApp (+256 785 157 237)
+          </a>
         </p>
       </section>
 
