@@ -1,6 +1,7 @@
 {
   "name": "secure-e-voting",
   "version": "0.1.0",
+   "type": "module",
   "private": true,
   "scripts": {
   "dev": "npm --prefix frontend run dev",
