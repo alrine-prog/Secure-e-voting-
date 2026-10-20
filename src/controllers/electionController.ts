@@ -18,15 +18,18 @@ export const createElectionHandler = async (req: Request, res: Response) => {
 
     const election = await prisma.election.create({
       data: {
-        universityId,
         title,
         description: description || null,
         startAt: new Date(startAt),
         endAt: new Date(endAt),
         status: 'open',
+        university:{
+          connect:{ Id: universityId},
+        },
         createdBy:{
           connect: { id: auth.userId},
-      }
+        },
+      },
     });
 
     await prisma.auditLog.create({
