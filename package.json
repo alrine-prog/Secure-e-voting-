@@ -4,11 +4,11 @@
    "type": "module",
   "private": true,
   "scripts": {
-  "dev": "npm --prefix frontend run dev",
+  "dev":  "prisma generate && tsx watch src/server.ts",
   "build": "prisma generate && tsc",
   "start": "node dist/src/server.js",
   "prisma": "prisma",
-  "seed": "ts-node -r tsconfig-paths/register src/seed.ts"
+  "seed": "tsx prisma/seed.ts"
   },
   "allowScripts": {
     "@prisma/client": true,
