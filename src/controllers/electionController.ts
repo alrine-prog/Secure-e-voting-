@@ -24,7 +24,8 @@ export const createElectionHandler = async (req: Request, res: Response) => {
         startAt: new Date(startAt),
         endAt: new Date(endAt),
         status: 'open',
-        createdBy: auth.userId
+        createdBy:{
+          connect: { id: auth.userId},
       }
     });
 
