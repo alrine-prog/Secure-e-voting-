@@ -48,7 +48,7 @@ app.get('/health', (_req, res) => res.json({ status: 'ok' }));
 
 // --- Locate Root Level Frontend Directory ---
 // Dynamically locates repo root whether server.js ends up in dist/ or dist/src/
-const getFrontendBuildPath = (): string => {
+const getFrontendBuildPath = () => {
   const directRootPath = path.resolve(__dirname, '../frontend/out');
   const nestedRootPath = path.resolve(__dirname, '../../frontend/out');
 
