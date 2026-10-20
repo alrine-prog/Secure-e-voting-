@@ -1,9 +1,18 @@
 // src/middleware/recaptcha.ts
 import { Request, Response, NextFunction } from 'express';
-import fetch from 'node-fetch';
 
 const RECAPTCHA_SECRET = process.env.RECAPTCHA_SECRET;
 const DEFAULT_THRESHOLD = Number(process.env.RECAPTCHA_THRESHOLD || 0.5);
+
+// Interface to type Google reCAPTCHA's API response
+interface RecaptchaResponse {
+  success: boolean;
+  score?: number;
+  action?: string;
+  challenge_ts?: string;
+  hostname?: string;
+  'error-codes'?: string[];
+}
 
 /**
  * Expects the client to send { recaptchaToken } in the JSON body.
@@ -28,7 +37,10 @@ export const recaptchaVerify = async (req: Request, res: Response, next: NextFun
       method: 'POST',
       body: params
     });
-    const data = await r.json();
+
+    // Cast the JSON response to RecaptchaResponse to resolve TS2339 errors
+    const data = (await r.json()) as RecaptchaResponse;
+
     if (!data || !data.success) {
       return res.status(400).json({ error: 'Failed recaptcha verification' });
     }
