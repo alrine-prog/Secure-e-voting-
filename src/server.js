@@ -7,7 +7,7 @@ import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import path from 'path';
 import fs from 'fs';
-import adminRouter from './routes/admin';
+import adminRouter from './routes/admin.js';
 import authRouter from './routes/auth';
 import universityRouter from './routes/university';
 import staffRouter from './routes/staff';
