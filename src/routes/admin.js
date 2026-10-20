@@ -1,7 +1,7 @@
 import express from 'express';
-import { approveVoterHandler, notifyApprovedVotersHandler } from '../controllers/voterController';
-import { requireAuth, requireRole } from '../utils/jwtMiddleware';
-import { listPendingUniversitiesHandler, approveUniversityHandler, rejectUniversityHandler, getUniversitySummaryHandler } from '../controllers/adminController';
+import { approveVoterHandler, notifyApprovedVotersHandler } from '../controllers/voterController.js';
+import { requireAuth, requireRole } from '../utils/jwtMiddleware.js';
+import { listPendingUniversitiesHandler, approveUniversityHandler, rejectUniversityHandler, getUniversitySummaryHandler } from '../controllers/adminController.js';
 
 const router = express.Router();
 
