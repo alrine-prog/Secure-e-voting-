@@ -3,9 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "prisma generate && tsx watch src/server.ts",
-    "install-deps": "npm install && npm install --prefix frontend",
-    "build": "npm run install-deps && npm run build --prefix frontend",
+    "dev:backend": "prisma generate && tsx watch src/server.ts",
+    "dev:frontend": "npm run dev --prefix frontend",
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "build:frontend": "npm install --prefix frontend && npm run build --prefix frontend",
+    "build:backend": "prisma generate && tsc",
+    "build": "npm run build:frontend && npm run build:backend",
     "postbuild": "npx prisma db push",
     "start": "node dist/server.js",
     "prisma": "prisma",
@@ -56,8 +59,10 @@
     "@types/react-dom": "^18.2.0",
     "@types/swagger-jsdoc": "^6.0.4",
     "@types/swagger-ui-express": "^4.1.6",
+    "concurrently": "^8.2.2",
     "prisma": "^5.21.0",
     "ts-node-dev": "^2.0.0",
+    "tsx": "^4.19.0",
     "typescript": "^5.0.0"
   }
 }
