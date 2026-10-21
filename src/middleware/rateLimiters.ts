@@ -1,13 +1,15 @@
 // src/middleware/rateLimiters.ts
 import rateLimit from 'express-rate-limit';
 import type { RateLimitRequestHandler } from 'express-rate-limit';
+import RedisStore from 'rate-limit-redis';
+import Redis from 'ioredis';
+
+// Initialize Redis client if REDIS_URL environment variable is present
+const redisClient = process.env.REDIS_URL ? new Redis(process.env.REDIS_URL) : null;
 
 /**
- * Create an express-rate-limit middleware with sane defaults.
- * Use this per-route to protect sensitive endpoints.
- *
- * Important: the default memory store is NOT suitable for multi-instance production.
- * For production, configure a Redis store (see notes below).
+ * Creates an express-rate-limit middleware with sane defaults.
+ * Automatically uses RedisStore in production/when REDIS_URL is configured.
  */
 export const createRateLimiter = (opts?: {
   windowMs?: number;
@@ -15,12 +17,18 @@ export const createRateLimiter = (opts?: {
   message?: string;
 }): RateLimitRequestHandler => {
   const { windowMs = 15 * 60 * 1000, max = 30, message } = opts || {};
+
   return rateLimit({
     windowMs,
     max,
     standardHeaders: true,
     legacyHeaders: false,
     message: message || 'Too many requests, please try again later.',
-    // store: new RedisStore({ client: redisClient }) // uncomment in production
+    ...(redisClient && {
+      store: new RedisStore({
+        // @ts-ignore
+        sendCommand: (...args: string[]) => redisClient.call(...args),
+      }),
+    }),
   });
 };
