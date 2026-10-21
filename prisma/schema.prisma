@@ -10,11 +10,6 @@ datasource db {
 // ==========================================
 // ENUMS
 // ==========================================
-enum Owner {
-  system_owner
-  admin
-  user
-}
 
 enum UserRole {
   system_owner
@@ -36,22 +31,9 @@ enum ElectionStatus {
   archived
 }
 
-// mode 
-
-model Owner {
-  id           String   @id @default(uuid())
-  role         Role     @default(user)
-  username     String   @unique
-  firstName    String
-  secondName   String
-  email        String   @unique
-  passwordHash String
-  isActive     Boolean  @default(true)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  @@map("public.User") // Matches the 'public.User' table name from your logs
-}
+// ==========================================
+// MODELS
+// ==========================================
 
 model University {
   id           String           @id @default(uuid())
@@ -62,16 +44,16 @@ model University {
   createdAt    DateTime         @default(now())
   updatedAt    DateTime         @updatedAt
 
-  users        User[]           @relation("UniversityUsers")
-  voters       Voter[]
-  elections    Election[]
+  users     User[]     @relation("UniversityUsers")
+  voters    Voter[]
+  elections Election[]
 
   @@index([status])
 }
 
 model User {
   id            String      @id @default(uuid())
-  university    University? @relation("UniversityUsers", fields: [universityId], references: [id])
+  university    University? @relation("UniversityUsers", fields: [universityId], references: [id], onDelete: SetNull)
   universityId  String?
   role          UserRole    @default(voter)
   username      String      @unique
@@ -87,14 +69,15 @@ model User {
 
   registeredVoters Voter[]    @relation("RegisteredBy")
   createdElections Election[] @relation("CreatedBy")
+  auditLogs        AuditLog[]
 }
 
 model Voter {
-  id                        String    @id @default(uuid())
-  university                University @relation(fields: [universityId], references: [id])
+  id                        String     @id @default(uuid())
+  university                University @relation(fields: [universityId], references: [id], onDelete: Cascade)
   universityId              String
   registeredByUserId        String
-  registeredBy              User      @relation("RegisteredBy", fields: [registeredByUserId], references: [id], onDelete: Cascade)
+  registeredBy              User       @relation("RegisteredBy", fields: [registeredByUserId], references: [id], onDelete: Cascade)
   studentRegistrationNumber String?
   nationalId                String?
   firstName                 String
@@ -104,9 +87,9 @@ model Voter {
   faculty                   String?
   college                   String?
   yearOfStudy               Int?
-  approved                  Boolean   @default(false)
-  createdAt                 DateTime  @default(now())
-  updatedAt                 DateTime  @updatedAt
+  approved                  Boolean    @default(false)
+  createdAt                 DateTime   @default(now())
+  updatedAt                 DateTime   @updatedAt
 
   voteTokens VoteToken[]
 
@@ -116,20 +99,20 @@ model Voter {
 
 model Election {
   id           String         @id @default(uuid())
-  university   University     @relation(fields: [universityId], references: [id])
+  university   University     @relation(fields: [universityId], references: [id], onDelete: Cascade)
   universityId String
   title        String
   description  String?
   startAt      DateTime
   endAt        DateTime
   status       ElectionStatus @default(draft)
-  createdById  String
-  createdBy    User           @relation("CreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  createdById  String?
+  createdBy    User?          @relation("CreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
   createdAt    DateTime       @default(now())
   updatedAt    DateTime       @updatedAt
 
-  voteTokens   VoteToken[]
-  votes        Vote[]
+  voteTokens VoteToken[]
+  votes      Vote[]
 
   @@index([universityId, status])
 }
@@ -172,6 +155,7 @@ model PasswordResetOtp {
 model AuditLog {
   id           String   @id @default(uuid())
   userId       String?
+  user         User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
   action       String
   resourceType String?
   resourceId   String?
