@@ -31,11 +31,6 @@ enum ElectionStatus {
   archived
 }
 
-enum Role {
-  system_owner
-  admin
-  user
-}
 // mode 
 
 model User {
