@@ -1,7 +1,6 @@
 {
   "name": "secure-e-voting",
   "version": "0.1.0",
-  "type": "module",
   "private": true,
   "scripts": {
     "dev": "prisma generate && tsx watch src/server.ts",
