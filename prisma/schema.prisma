@@ -31,9 +31,27 @@ enum ElectionStatus {
   archived
 }
 
-// ==========================================
-// MODELS
-// ==========================================
+enum Role {
+  system_owner
+  admin
+  user
+}
+// mode 
+
+model User {
+  id           String   @id @default(uuid())
+  role         Role     @default(user)
+  username     String   @unique
+  firstName    String
+  secondName   String
+  email        String   @unique
+  passwordHash String
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("public.User") // Matches the 'public.User' table name from your logs
+}
 
 model University {
   id           String           @id @default(uuid())
