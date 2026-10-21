@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "prisma generate && tsx watch src/server.ts",
-    "build": "prisma generate && tsc",
+    "install-deps": "npm install && npm install --prefix frontend",
+    "build": "npm run install-deps && npm run build --prefix frontend",
     "postbuild": "npx prisma db push",
     "start": "node dist/server.js",
     "prisma": "prisma",
