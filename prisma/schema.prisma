@@ -10,7 +10,7 @@ datasource db {
 // ==========================================
 // ENUMS
 // ==========================================
-enum Role {
+enum Owner {
   system_owner
   admin
   user
@@ -38,7 +38,7 @@ enum ElectionStatus {
 
 // mode 
 
-model User {
+model Owner {
   id           String   @id @default(uuid())
   role         Role     @default(user)
   username     String   @unique
