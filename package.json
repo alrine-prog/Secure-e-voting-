@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "prisma generate && tsx watch src/server.ts",
     "build": "prisma generate && tsc",
-    "start": "node dist/src/server.js",
+    "start": "node dist/server.js",
     "prisma": "prisma",
     "seed": "tsx prisma/seed.ts"
   },
