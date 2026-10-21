@@ -10,6 +10,10 @@ datasource db {
 // ==========================================
 // ENUMS
 // ==========================================
+enum Role {
+  system_owner
+  admin
+  user
 
 enum UserRole {
   system_owner
