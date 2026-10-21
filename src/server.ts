@@ -7,24 +7,32 @@ import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import path from 'path';
 import fs from 'fs';
+import { fileURLToPath } from 'url'; // Required for ESM
+
 import adminRouter from './routes/admin.js';
-import authRouter from './routes/auth';
-import universityRouter from './routes/university';
-import staffRouter from './routes/staff';
-import electionsRouter from './routes/elections';
-import csvRouter from './routes/csv';
-import supportRouter from './routes/support';
-import { seedSystemOwner } from './seed';
-import { errorHandler } from './middleware/errorHandler';
-import { setupSwagger } from './swagger';
+import authRouter from './routes/auth.js';
+import universityRouter from './routes/university.js';
+import staffRouter from './routes/staff.js';
+import electionsRouter from './routes/elections.js';
+import csvRouter from './routes/csv.js';
+import supportRouter from './routes/support.js';
+import { seedSystemOwner } from './seed.js';
+import { errorHandler } from './middleware/errorHandler.js';
+import { setupSwagger } from './swagger.js';
 
 dotenv.config();
 
+// Fix __dirname for ES Modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 const app = express();
 
-app.use(helmet({
-  contentSecurityPolicy: false // Allows inline scripts/styles needed by built frontend apps
-}));
+app.use(
+  helmet({
+    contentSecurityPolicy: false
+  })
+);
 app.use(morgan('dev'));
 app.use(express.json({ limit: '1mb' }));
 app.use(cookieParser());
@@ -46,26 +54,31 @@ setupSwagger(app);
 
 app.get('/health', (_req, res) => res.json({ status: 'ok' }));
 
-// --- Locate Root Level Frontend Directory ---
-// Dynamically locates repo root whether server.js ends up in dist/ or dist/src/
+// --- Locate Frontend Directory ---
 const getFrontendBuildPath = () => {
-  const directRootPath = path.resolve(__dirname, '../frontend/out');
-  const nestedRootPath = path.resolve(__dirname, '../../frontend/out');
+  const possiblePaths = [
+    path.resolve(__dirname, '../frontend/out'),
+    path.resolve(__dirname, '../../frontend/out'),
+    path.resolve(process.cwd(), 'frontend/out'),
+    path.resolve(process.cwd(), 'frontend/dist'),
+    path.resolve(process.cwd(), 'frontend/build')
+  ];
 
-  if (fs.existsSync(directRootPath)) {
-    return directRootPath;
+  for (const p of possiblePaths) {
+    if (fs.existsSync(p)) return p;
   }
-  return nestedRootPath;
+  return null;
 };
 
 const frontendBuildPath = getFrontendBuildPath();
 
 // --- Serve Frontend Static Assets ---
-if (fs.existsSync(frontendBuildPath)) {
+if (frontendBuildPath) {
+  console.log(`Serving frontend static files from: ${frontendBuildPath}`);
   app.use(express.static(frontendBuildPath));
 
   app.get('*', (req, res, next) => {
-    // Let unhandled API routes pass through to 404/error handlers
+    // Exclude API and Swagger routes
     if (
       req.path.startsWith('/auth') ||
       req.path.startsWith('/admin') ||
@@ -86,7 +99,7 @@ if (fs.existsSync(frontendBuildPath)) {
     next();
   });
 } else {
-  // API Fallback message if static frontend export wasn't generated
+  console.warn('Frontend build folder not found. Running in API-only mode.');
   app.get('/', (_req, res) => {
     res.json({
       message: 'Secure E-Voting API Server is running live!',
