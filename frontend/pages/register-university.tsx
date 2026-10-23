@@ -100,13 +100,13 @@ export default function RegisterUniversityPage() {
     <div style={{ minHeight: '100vh', width: '100%', boxSizing: 'border-box' }}>
       <Head>
         <title>Register University - Secure-e-voting</title>
-        {SITE_KEY && (
+        {SITE_KEY ? (
           <script
             src={`https://www.google.com/recaptcha/api.js?render=${SITE_KEY}`}
             async
             defer
           />
-        )}
+        ) : null}
       </Head>
 
       <Nav />
@@ -159,7 +159,4 @@ export default function RegisterUniversityPage() {
             </div>
           </div>
 
-          <hr style={{ border: 0, borderTop: '1px solid #e5e7eb', margin: '1rem 0' }} />
-
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem' }}>
-            <h3 style={{ gridColumn: '1 / -1', fontSize: '1.25rem
+          <hr style={{ border: 0, borderTop: '1px solid #e5e7eb', margin: '1
