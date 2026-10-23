@@ -20,7 +20,6 @@ export default function Nav() {
     <nav className="top-nav">
       <div className="nav-links">
         <Link href="/"><a>Home</a></Link>
-        <Link href="/register-university"><a>signup for universityaccount</a></Link>
         <Link href="/about"><a>About</a></Link>
         <Link href="/policies"><a>Policies</a></Link>
         <Link href="/terms"><a>Terms</a></Link>
