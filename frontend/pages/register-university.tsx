@@ -108,6 +108,7 @@ export default function RegisterUniversityPage() {
           />
         ) : null}
       </Head>
+    </div>
 
       <Nav />
 
