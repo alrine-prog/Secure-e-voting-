@@ -4,8 +4,17 @@ import type { RateLimitRequestHandler } from 'express-rate-limit';
 import RedisStore from 'rate-limit-redis';
 import Redis from 'ioredis';
 
-// Initialize Redis client if REDIS_URL environment variable is present
-const redisClient = process.env.REDIS_URL ? new Redis(process.env.REDIS_URL) : null;
+// Safely validate that REDIS_URL exists and starts with a valid protocol scheme
+const rawRedisUrl = process.env.REDIS_URL?.trim();
+const isValidRedisUrl = 
+  typeof rawRedisUrl === 'string' && 
+  (rawRedisUrl.startsWith('redis://') || rawRedisUrl.startsWith('rediss://'));
+
+const redisClient = isValidRedisUrl ? new Redis(rawRedisUrl) : null;
+
+if (!redisClient) {
+  console.warn('⚠️ REDIS_URL missing or invalid. Rate limiter is using default MemoryStore.');
+}
 
 /**
  * Creates an express-rate-limit middleware with sane defaults.
