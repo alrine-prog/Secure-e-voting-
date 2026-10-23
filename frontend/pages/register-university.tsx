@@ -97,7 +97,7 @@ export default function RegisterUniversityPage() {
   };
 
   return (
-    <div style={{ minHeight: '100vh', width: '100%', boxSizing: 'border-box' }}>
+    <div style={{ minHeight: '100vh', width: '100%', boxSizing: 'border-box' }}/>
       <Head>
         <title>Register University - Secure-e-voting</title>
         {SITE_KEY ? (
@@ -108,11 +108,8 @@ export default function RegisterUniversityPage() {
           />
         ) : null}
       </Head>
-    </div>
 
-      <Nav />
-
-      <main style={{ maxWidth: '800px', margin: '0 auto', padding: '1rem 1.25rem 2.5rem', width: '100%', boxSizing: 'border-box' }}>
+      <main style={{ maxWidth: '800px', margin: '0 auto', padding: '1rem 1.25rem 2.5rem', width: '100%', boxSizing: 'border-box' }}/>
         <header style={{ marginBottom: '1.5rem' }}>
           <h2 style={{ fontSize: '1.75rem', marginBottom: '0.5rem' }}>Register Your University</h2>
           <p style={{ lineHeight: '1.5', color: '#4b5563' }}>
@@ -121,7 +118,7 @@ export default function RegisterUniversityPage() {
           </p>
         </header>
 
-        <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+        <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}/>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem' }}/>
             <div style={{ gridColumn: '1 / -1', display: 'flex', flexDirection: 'column', gap: '0.375rem' }}/>
               <label htmlFor="uni-name">University name *</label>
