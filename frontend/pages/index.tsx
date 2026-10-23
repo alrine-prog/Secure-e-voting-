@@ -71,7 +71,7 @@ export default function LoginPage() {
 
           <div className="signup-prompt">
             <span>Don't have an account? </span>
-            <Link href="/signup">Sign up for a university account</Link>
+            <Link href="/register-university">Sign up for a university account</Link>
           </div>
         </div>
       </main>
