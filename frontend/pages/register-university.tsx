@@ -97,7 +97,7 @@ export default function RegisterUniversityPage() {
   };
 
   return (
-    <div className="page-wrapper">
+    <div style={{ minHeight: '100vh', width: '100%', boxSizing: 'border-box' }}>
       <Head>
         <title>Register University - Secure-e-voting</title>
         {SITE_KEY && (
@@ -108,29 +108,58 @@ export default function RegisterUniversityPage() {
           />
         )}
       </Head>
-    </div>
 
       <Nav />
 
-      <main className="container">
-        <header className="page-header">
-          <h2>Register Your University</h2>
-          <p>
+      <main style={{ maxWidth: '800px', margin: '0 auto', padding: '1rem 1.25rem 2.5rem', width: '100%', boxSizing: 'border-box' }}>
+        <header style={{ marginBottom: '1.5rem' }}>
+          <h2 style={{ fontSize: '1.75rem', marginBottom: '0.5rem' }}>Register Your University</h2>
+          <p style={{ lineHeight: '1.5', color: '#4b5563' }}>
             Fill this form to create a new university entry in the system. The initial university admin account will be
             created in a pending state and activated once the system owner approves the university.
           </p>
         </header>
-      </main>
 
-        <form onSubmit={submit} className="form-wrapper">
-          <section className="form-section">
-            <div className="form-group full-width">
+        <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem' }}>
+            <div style={{ gridColumn: '1 / -1', display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
               <label htmlFor="uni-name">University name *</label>
               <input
                 id="uni-name"
                 className="input"
+                style={{ width: '100%', padding: '0.625rem 0.75rem', boxSizing: 'border-box', border: '1px solid #d1d5db', borderRadius: '0.375rem', fontSize: '1rem' }}
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
               />
             </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
+              <label htmlFor="uni-country">Country *</label>
+              <input
+                id="uni-country"
+                className="input"
+                style={{ width: '100%', padding: '0.625rem 0.75rem', boxSizing: 'border-box', border: '1px solid #d1d5db', borderRadius: '0.375rem', fontSize: '1rem' }}
+                value={country}
+                onChange={(e) => setCountry(e.target.value)}
+                required
+              />
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
+              <label htmlFor="uni-district">District / City *</label>
+              <input
+                id="uni-district"
+                className="input"
+                style={{ width: '100%', padding: '0.625rem 0.75rem', boxSizing: 'border-box', border: '1px solid #d1d5db', borderRadius: '0.375rem', fontSize: '1rem' }}
+                value={districtCity}
+                onChange={(e) => setDistrictCity(e.target.value)}
+                required
+              />
+            </div>
+          </div>
+
+          <hr style={{ border: 0, borderTop: '1px solid #e5e7eb', margin: '1rem 0' }} />
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem' }}>
+            <h3 style={{ gridColumn: '1 / -1', fontSize: '1.25rem
