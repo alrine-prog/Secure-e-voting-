@@ -108,6 +108,7 @@ export default function RegisterUniversityPage() {
           />
         )}
       </Head>
+    </div>
 
       <Nav />
 
@@ -119,6 +120,7 @@ export default function RegisterUniversityPage() {
             created in a pending state and activated once the system owner approves the university.
           </p>
         </header>
+      </main>
 
         <form onSubmit={submit} className="form-wrapper">
           <section className="form-section">
@@ -131,4 +133,4 @@ export default function RegisterUniversityPage() {
                 onChange={(e) => setName(e.target.value)}
                 required
               />
-            
+            </div>
