@@ -1,14 +1,22 @@
-import express from 'express';
-import { loginHandler, forgotPasswordHandler, resetPasswordHandler, logoutHandler } from '../controllers/authController';
-import { createRateLimiter } from '../middleware/rateLimiters';
-
-const loginLimiter = createRateLimiter({ windowMs: 15 * 60 * 1000, max: 10, message: 'Too many login attempts; try again later.' });
-const router = express.Router();
-
-router.post('/login', loginLimiter, loginHandler);
-router.post('/login', loginHandler);
-router.post('/logout', logoutHandler);
-router.post('/forgot-password', forgotPasswordHandler);
-router.post('/reset-password', resetPasswordHandler);
-
-export default router;
+// Helper function used in your Login form submit handler
+export function redirectUserByRole(role: string, router: any) {
+  switch (role) {
+    case 'system_owner':
+      router.push('/system-owner/universities');
+      break;
+    case 'uni_admin':
+      router.push('/admin/dashboard');
+      break;
+    case 'staff':
+      router.push('/staff/register-voter');
+      break;
+    case 'voter':
+      router.push('/voter/ballot');
+      break;
+    case 'observer':
+      router.push('/observer/live-tally');
+      break;
+    default:
+      router.push('/unauthorized');
+  }
+}
