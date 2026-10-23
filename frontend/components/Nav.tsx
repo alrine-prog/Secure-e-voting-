@@ -23,7 +23,6 @@ export default function Nav() {
         <Link href="/about"><a>About</a></Link>
         <Link href="/policies"><a>Policies</a></Link>
         <Link href="/terms"><a>Terms</a></Link>
-        <Link href="/register-university"><a>Register University</a></Link>
         <Link href="/contact"><a>Contact</a></Link>
       </div>
 
