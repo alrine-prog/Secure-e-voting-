@@ -122,8 +122,8 @@ export default function RegisterUniversityPage() {
         </header>
 
         <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem' }}>
-            <div style={{ gridColumn: '1 / -1', display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem' }}/>
+            <div style={{ gridColumn: '1 / -1', display: 'flex', flexDirection: 'column', gap: '0.375rem' }}/>
               <label htmlFor="uni-name">University name *</label>
               <input
                 id="uni-name"
@@ -133,9 +133,8 @@ export default function RegisterUniversityPage() {
                 onChange={(e) => setName(e.target.value)}
                 required
               />
-            </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem' }}/>
               <label htmlFor="uni-country">Country *</label>
               <input
                 id="uni-country"
@@ -145,9 +144,8 @@ export default function RegisterUniversityPage() {
                 onChange={(e) => setCountry(e.target.value)}
                 required
               />
-            </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem' }}/>
               <label htmlFor="uni-district">District / City *</label>
               <input
                 id="uni-district"
@@ -157,7 +155,5 @@ export default function RegisterUniversityPage() {
                 onChange={(e) => setDistrictCity(e.target.value)}
                 required
               />
-            </div>
-          </div>
 
           <hr style={{ border: 0, borderTop: '1px solid #e5e7eb', margin: '1
