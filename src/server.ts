@@ -9,7 +9,7 @@ import path from 'path';
 import next from 'next';
 
 import adminRouter from './routes/admin';
-import { auth } from './routes/auth'; // or import * as auth from './routes/auth';
+import authRouter from './routes/auth';
 import universityRouter from './routes/university';
 import staffRouter from './routes/staff';
 import electionsRouter from './routes/elections';
