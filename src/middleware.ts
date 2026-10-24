@@ -1,4 +1,3 @@
-import { NextResponse } from 'next/server';
 import { NextRequest, NextResponse } from 'next/server';
 // Define route permissions for each portal prefix
 const ROLE_PERMISSIONS: Record<string, string[]> = {
