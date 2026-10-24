@@ -2,14 +2,20 @@ import { useEffect, useState } from 'react';
 import Nav from '../../components/Nav';
 import { apiFetch } from '../../lib/api';
 
-export default function AdminGeneralPage() {
+export default function UniversityAdminPage() {
   const [user, setUser] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [message, setMessage] = useState('');
-  const [csvFile, setCsvFile] = useState<File | null>(null);
+  // Staff Form state
+  const [staffEmail, setStaffEmail] = useState('');
+  const [staffName, setStaffName] = useState('');
+  const [staffMessage, setStaffMessage] = useState('');
+
+  // Observer Form state
+  const [observerEmail, setObserverEmail] = useState('');
+  const [observerName, setObserverName] = useState('');
+  const [organization, setOrganization] = useState('');
+  const [observerMessage, setObserverMessage] = useState('');
 
   useEffect(() => {
     (async () => {
@@ -20,75 +26,135 @@ export default function AdminGeneralPage() {
   }, []);
 
   if (loading) return <div className="container"><Nav /><p>Loading...</p></div>;
-  if (!user) return <div className="container"><Nav /><p>Please sign in as staff.</p></div>;
+
+  if (!user || (user.role !== 'university_admin' && user.role !== 'uni_admin')) {
+    return (
+      <div className="container">
+        <Nav />
+        <p>Access denied. University Admin access required.</p>
+      </div>
+    );
+  }
 
   const universityId = user.universityId;
 
-  const registerVoter = async (e: any) => {
+  // Handle Staff Registration
+  const handleAddStaff = async (e: React.FormEvent) => {
     e.preventDefault();
-    setMessage('');
-    const res = await apiFetch(`/staff/${universityId}/voters`, {
+    setStaffMessage('');
+
+    const res = await apiFetch(`/admin/universities/${universityId}/staff`, {
       method: 'POST',
-      body: JSON.stringify({ firstName, secondName: lastName })
+      body: JSON.stringify({ email: staffEmail, name: staffName }),
     });
-    if (!res.ok) setMessage(res.body?.error || 'Registration failed');
-    else {
-      setMessage('Voter registered (pending approval)');
-      setFirstName('');
-      setLastName('');
+
+    if (!res.ok) {
+      setStaffMessage(res.body?.error || 'Failed to add staff member');
+    } else {
+      setStaffMessage('Staff member created successfully');
+      setStaffEmail('');
+      setStaffName('');
     }
   };
 
-  const uploadCsv = async (e: any) => {
+  // Handle Observer Registration
+  const handleAddObserver = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!csvFile) {
-      setMessage('Pick a CSV file first');
-      return;
-    }
-    setMessage('');
-    const fd = new FormData();
-    fd.append('file', csvFile);
-    // apiFetch helper doesn't support multipart — use fetch directly
-    const apiBase = process.env.NEXT_PUBLIC_API_BASE || '';
-    const resp = await fetch(`${apiBase}/staff/${universityId}/voters/upload`, {
+    setObserverMessage('');
+
+    const res = await apiFetch(`/admin/universities/${universityId}/observers`, {
       method: 'POST',
-      credentials: 'include',
-      body: fd
+      body: JSON.stringify({
+        email: observerEmail,
+        name: observerName,
+        organization,
+      }),
     });
-    const data = await resp.json().catch(() => null);
-    if (!resp.ok) setMessage(data?.error || 'CSV upload failed');
-    else setMessage(`CSV processed: ${data?.count || 'unknown'} rows`);
+
+    if (!res.ok) {
+      setObserverMessage(res.body?.error || 'Failed to add observer');
+    } else {
+      setObserverMessage('Observer registered successfully');
+      setObserverEmail('');
+      setObserverName('');
+      setOrganization('');
+    }
   };
 
   return (
     <div className="container">
       <Nav />
-      <h2>Staff Console</h2>
-      <p>Welcome, {user.email}. Register voters for your institution here.</p>
+      <h2>University Admin Dashboard</h2>
+      <p>Welcome, {user.email}. Institution ID: {universityId}</p>
 
-      <section style={{ marginTop: 18 }}>
-        <form onSubmit={registerVoter}>
-          <label>First name</label>
-          <input className="input" value={firstName} onChange={(e) => setFirstName(e.target.value)} />
-          <label>Second/Last name</label>
-          <input className="input" value={lastName} onChange={(e) => setLastName(e.target.value)} />
+      {/* Staff Registration Section */}
+      <section style={{ marginTop: 24, padding: '16px', border: '1px solid #ccc', borderRadius: '8px' }}>
+        <h3>Register Staff Member</h3>
+        <form onSubmit={handleAddStaff}>
+          <div>
+            <label>Full Name</label>
+            <input
+              className="input"
+              value={staffName}
+              onChange={(e) => setStaffName(e.target.value)}
+              required
+            />
+          </div>
           <div style={{ marginTop: 8 }}>
-            <button type="submit">Register Voter</button>
+            <label>Email Address</label>
+            <input
+              type="email"
+              className="input"
+              value={staffEmail}
+              onChange={(e) => setStaffEmail(e.target.value)}
+              required
+            />
+          </div>
+          <div style={{ marginTop: 12 }}>
+            <button type="submit">Create Staff Account</button>
           </div>
         </form>
-        {message && <p style={{ marginTop: 12 }}>{message}</p>}
+        {staffMessage && <p style={{ marginTop: 12 }}>{staffMessage}</p>}
       </section>
 
-      <section style={{ marginTop: 28 }}>
-        <h3>CSV Upload</h3>
-        <p>Upload a CSV with columns: firstName,secondName,email,phone,...</p>
-        <form onSubmit={uploadCsv}>
-          <input type="file" accept=".csv,text/csv" onChange={(e) => setCsvFile(e.target.files?.[0] || null)} />
+      {/* Observer Registration Section */}
+      <section style={{ marginTop: 24, padding: '16px', border: '1px solid #ccc', borderRadius: '8px' }}>
+        <h3>Register Election Observer</h3>
+        <form onSubmit={handleAddObserver}>
+          <div>
+            <label>Full Name</label>
+            <input
+              className="input"
+              value={observerName}
+              onChange={(e) => setObserverName(e.target.value)}
+              required
+            />
+          </div>
           <div style={{ marginTop: 8 }}>
-            <button type="submit">Upload CSV</button>
+            <label>Email Address</label>
+            <input
+              type="email"
+              className="input"
+              value={observerEmail}
+              onChange={(e) => setObserverEmail(e.target.value)}
+              required
+            />
+          </div>
+          <div style={{ marginTop: 8 }}>
+            <label>Organization / Body (Optional)</label>
+            <input
+              className="input"
+              value={organization}
+              onChange={(e) => setOrganization(e.target.value)}
+              placeholder="e.g. Electoral Commission, Student Union Body"
+            />
+          </div>
+          <div style={{ marginTop: 12 }}>
+            <button type="submit">Create Observer Account</button>
           </div>
         </form>
+        {observerMessage && <p style={{ marginTop: 12 }}>{observerMessage}</p>}
       </section>
     </div>
   );
-          }
+}
