@@ -21,3 +21,4 @@ export function redirectUserByRole(role: string, router: any) {
       break;
   }
 }
+export default authRouter;
