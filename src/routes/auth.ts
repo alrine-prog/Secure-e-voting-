@@ -18,6 +18,6 @@ export function redirectUserByRole(role: string, router: any) {
       break;
     default:
       router.push('/unauthorized');
-      export default authRouter;
+      export default router;
   }
 }
