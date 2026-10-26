@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import Head from 'next/head';
-import Nav from '../components/Nav';
+import navigation from '../components/navigation;
 import { apiFetch } from '../lib/api';
 
 const siteKey = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
