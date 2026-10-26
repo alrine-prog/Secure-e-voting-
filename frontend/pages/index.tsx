@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 import Link from 'next/link';
 import Nav from '../components/Nav';
 import { apiFetch } from '../lib/api';
+import { redirectUserByRole } from '../utils/navigation';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -10,33 +11,55 @@ export default function LoginPage() {
   const [err, setErr] = useState('');
   const router = useRouter();
 
+  // Selected role passed from Nav dropdown (?role=...)
+  const selectedRole = (router.query.role as string) || '';
+
   const submit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setErr('');
+
     const resp = await apiFetch('/auth/login', {
       method: 'POST',
-      body: JSON.stringify({ email, password })
+      body: JSON.stringify({ email, password, role: selectedRole || undefined }),
     });
+
     if (!resp.ok) {
       setErr(resp.body?.error || 'Login failed');
       return;
     }
+
     const user = resp.body?.user;
-    if (user?.role === 'system_owner' || user?.role === 'university_admin') {
-      router.push('/admin');
-    } else if (user?.role === 'staff') {
-      router.push('/staff');
+
+    // Use centralized navigation helper to handle all 5 roles
+    if (user?.role) {
+      redirectUserByRole(user.role, router);
     } else {
-      router.push('/voter');
+      setErr('Invalid user role returned from server');
+    }
+  };
+
+  // Helper to format role title string
+  const getRoleTitle = (role: string) => {
+    switch (role) {
+      case 'system_owner': return 'System Owner';
+      case 'uni_admin': return 'University Admin';
+      case 'staff': return 'Staff';
+      case 'voter': return 'Voter';
+      case 'observer': return 'Observer';
+      default: return '';
     }
   };
 
   return (
     <div className="page-wrapper">
       <Nav />
+
       <main className="login-container">
         <div className="login-card">
-          <h2>Login</h2>
+          <h2>
+            {selectedRole ? `Login as ${getRoleTitle(selectedRole)}` : 'Login'}
+          </h2>
+
           <form onSubmit={submit} className="login-form">
             <div className="form-group">
               <label htmlFor="email">Email</label>
@@ -71,7 +94,9 @@ export default function LoginPage() {
 
           <div className="signup-prompt">
             <span>Don't have an account? </span>
-            <Link href="/register-university"><a>Sign up for a university account</a></Link>
+            <Link href="/register-university" className="signup-link">
+              Sign up for a university account
+            </Link>
           </div>
         </div>
       </main>
@@ -81,6 +106,7 @@ export default function LoginPage() {
           min-height: 100vh;
           display: flex;
           flex-direction: column;
+          background-color: #f8fafc;
         }
 
         .login-container {
@@ -94,7 +120,7 @@ export default function LoginPage() {
 
         .login-card {
           width: 100%;
-          max-width: 440px; /* Expands nicely up to 440px on large screens */
+          max-width: 440px;
           margin: 0 auto;
           padding: 32px 24px;
           background: #ffffff;
@@ -108,7 +134,8 @@ export default function LoginPage() {
           margin-bottom: 24px;
           text-align: center;
           font-size: 1.75rem;
-          color: #1a202c;
+          color: #0f172a;
+          text-transform: capitalize;
         }
 
         .login-form {
@@ -126,13 +153,13 @@ export default function LoginPage() {
         label {
           font-weight: 500;
           font-size: 0.9rem;
-          color: #4a5568;
+          color: #475569;
         }
 
         .input {
           width: 100%;
           padding: 10px 12px;
-          border: 1px solid #cbd5e0;
+          border: 1px solid #cbd5e1;
           border-radius: 6px;
           font-size: 1rem;
           box-sizing: border-box;
@@ -141,23 +168,23 @@ export default function LoginPage() {
 
         .input:focus {
           outline: none;
-          border-color: #3182ce;
-          box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.2);
+          border-color: #0f172a;
+          box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.15);
         }
 
         .error {
-          color: #e53e3e;
+          color: #dc2626;
           font-size: 0.875rem;
-          background: #fff5f5;
+          background: #fef2f2;
           padding: 8px 12px;
           border-radius: 6px;
-          border: 1px solid #fed7d7;
+          border: 1px solid #fecaca;
         }
 
         .submit-btn {
           width: 100%;
           padding: 12px;
-          background-color: #3182ce;
+          background-color: #0f172a;
           color: white;
           border: none;
           border-radius: 6px;
@@ -169,23 +196,23 @@ export default function LoginPage() {
         }
 
         .submit-btn:hover {
-          background-color: #2b6cb0;
+          background-color: #1e293b;
         }
 
         .signup-prompt {
           margin-top: 24px;
           text-align: center;
           font-size: 0.9rem;
-          color: #718096;
+          color: #64748b;
         }
 
-        .signup-prompt :global(a) {
-          color: #3182ce;
+        .signup-prompt :global(.signup-link) {
+          color: #2563eb;
           text-decoration: none;
           font-weight: 500;
         }
 
-        .signup-prompt :global(a:hover) {
+        .signup-prompt :global(.signup-link:hover) {
           text-decoration: underline;
         }
       `}</style>
