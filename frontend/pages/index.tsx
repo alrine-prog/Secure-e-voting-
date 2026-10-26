@@ -1,7 +1,10 @@
-import { redirectUserByRole } from '../src/utils/Nav';
+import { useState } from 'react';
+import { useRouter } from 'next/router';
 import Link from 'next/link';
 import Nav from '../components/Nav';
 import { apiFetch } from '../lib/api';
+// Updated to import from navigation instead of Nav
+import { redirectUserByRole } from '../src/utils/navigation'; // Or use '@/utils/navigation' if using tsconfig aliases
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
