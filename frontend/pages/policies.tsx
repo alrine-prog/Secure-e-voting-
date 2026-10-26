@@ -1,9 +1,9 @@
-import navigation from '../components/navigation';
+import Nav from '../components/Nav';
 
 export default function PoliciesPage() {
   return (
     <div className="container">
-      <navigation />
+      <Nav/>
       <h2>Policies</h2>
 
       <section style={{ marginTop: 12 }}>
