@@ -1,4 +1,4 @@
-import { redirectUserByRole } from '@/utils/Nav';
+import { redirectUserByRole } from '../utils/Nav';
 import Link from 'next/link';
 import Nav from '../components/Nav';
 import { apiFetch } from '../lib/api';
