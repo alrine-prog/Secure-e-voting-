@@ -1,6 +1,14 @@
-// src/utils/navigation.js
+import type { NextRouter } from 'next/router';
 
-export function redirectUserByRole(role, router) {
+// Define the valid user roles as a union type
+export type UserRole = 
+  | 'system_owner' 
+  | 'uni_admin' 
+  | 'staff' 
+  | 'voter' 
+  | 'observer';
+
+export function redirectUserByRole(role: UserRole | string, router: NextRouter): void {
   switch (role) {
     case 'system_owner':
       router.push('/system-owner/universities');
