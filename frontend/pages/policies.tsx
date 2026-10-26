@@ -3,7 +3,7 @@ import navigation from '../components/navigation';
 export default function PoliciesPage() {
   return (
     <div className="container">
-      <Nav />
+      <navigation />
       <h2>Policies</h2>
 
       <section style={{ marginTop: 12 }}>
