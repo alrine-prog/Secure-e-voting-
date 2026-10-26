@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { useRouter } from 'next/router';
+import { redirectUserByRole } from '@/utils/Nav';
 import Link from 'next/link';
-import Nav from '../components/navigation';
+import Nav from '../components/Nav';
 import { apiFetch } from '../lib/api';
 import { redirectUserByRole } from '../utils/navigation';
 
