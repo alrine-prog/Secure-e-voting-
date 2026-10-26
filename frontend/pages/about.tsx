@@ -1,4 +1,4 @@
-import Nav from '../components/Nav';
+import navigation from '../components/navigation';
 
 export default function AboutPage() {
   return (
