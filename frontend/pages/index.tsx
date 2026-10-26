@@ -2,9 +2,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import Nav from '../components/Nav';
-import { apiFetch } from '../lib/api';
-// Updated to import from navigation instead of Nav
-import { redirectUserByRole } from '../utils/navigation';
+import { apiFetch, redirectUserByRole} from '../lib/api';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
