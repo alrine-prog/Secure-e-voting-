@@ -4,7 +4,7 @@ import Link from 'next/link';
 import Nav from '../components/Nav';
 import { apiFetch } from '../lib/api';
 // Updated to import from navigation instead of Nav
-import { redirectUserByRole } from '../src/utils/navigation'; // Or use '@/utils/navigation' if using tsconfig aliases
+import { redirectUserByRole } from '@/utils/navigation';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
