@@ -3,7 +3,7 @@ import navigation from '../components/navigation';
 export default function AboutPage() {
   return (
     <div className="container">
-      <Nav />
+      <navigation />
       <h2>About Secure E‑Voting</h2>
       <p>
         Secure E‑Voting is an online election platform built for universities and institutions.
