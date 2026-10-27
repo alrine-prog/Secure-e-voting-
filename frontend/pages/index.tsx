@@ -4,7 +4,7 @@ import Image from 'next/image';
 export default function HomePage() {
   return (
     <div className="bg-slate-900 text-slate-100 min-h-screen flex flex-col font-sans antialiased"/>
-      {/* TOP NAVIGATION */}
+      /* TOP NAVIGATION */
       <nav className="top-nav flex items-center justify-between w-full px-6 py-4 bg-slate-900 border-b border-slate-800 text-white sticky top-0 z-50"/>
         <div className="flex items-center gap-6">
           <Link href="/" legacyBehavior>
@@ -31,13 +31,13 @@ export default function HomePage() {
               Live Tally
             </a>
           </Link>
-          {/* Sign In / Login button hidden from top menu bar */}
+          /* Sign In / Login button hidden from top menu bar */
         </div>
       </nav>
 
-      {/* MAIN CONTAINER */}
+      /* MAIN CONTAINER */
       <main className="flex-grow max-w-6xl w-full mx-auto px-6 py-12 space-y-16">
-        {/* HERO SECTION */}
+        /* HERO SECTION */
         <section className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           <div className="space-y-6 text-left">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
@@ -67,7 +67,6 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* HERO IMAGE / GRAPHIC */}
           <div className="relative rounded-2xl overflow-hidden border border-slate-800 bg-slate-800/40 shadow-2xl p-2 group">
             <div className="relative w-full h-80 sm:h-96 rounded-xl overflow-hidden bg-slate-950 flex items-center justify-center">
               <img
