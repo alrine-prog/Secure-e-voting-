@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import Nav from '../components/Nav';
-import { apiFetch, redirectUserByRole} from '../lib/api';
+import { apiFetch, redirectUserByRole } from '../lib/api';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -93,8 +93,10 @@ export default function LoginPage() {
 
           <div className="signup-prompt">
             <span>Don't have an account? </span>
-            <Link href="/register-university" className="signup-link">
-              Sign up for a university account
+            <Link href="/register-university" legacyBehavior>
+              <a className="signup-link">
+                Sign up for a university account
+              </a>
             </Link>
           </div>
         </div>
