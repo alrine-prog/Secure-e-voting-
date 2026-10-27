@@ -3,9 +3,9 @@ import Image from 'next/image';
 
 export default function HomePage() {
   return (
-    <div className="bg-slate-900 text-slate-100 min-h-screen flex flex-col font-sans antialiased">
+    <div className="bg-slate-900 text-slate-100 min-h-screen flex flex-col font-sans antialiased"/>
       {/* TOP NAVIGATION */}
-      <nav className="top-nav flex items-center justify-between w-full px-6 py-4 bg-slate-900 border-b border-slate-800 text-white sticky top-0 z-50">
+      <nav className="top-nav flex items-center justify-between w-full px-6 py-4 bg-slate-900 border-b border-slate-800 text-white sticky top-0 z-50"/>
         <div className="flex items-center gap-6">
           <Link href="/" legacyBehavior>
             <a className="font-bold text-lg text-white hover:text-purple-400 transition">
