@@ -24,7 +24,7 @@ export default function Nav({ userRole }: NavProps) {
     <nav className="top-nav flex items-center justify-between w-full relative px-6 py-4 bg-slate-900 text-white">
       {/* LEFT SIDE: Brand & Links */}
       <div className="nav-links flex items-center gap-6">
-        <Link href="/" className="font-bold text-lg">Voting System</Link>
+        <Link href="/" className="font-bold text-lg">Home</Link>
         <Link href="/about">About</Link>
         <Link href="/policies">Policies</Link>
       </div>
