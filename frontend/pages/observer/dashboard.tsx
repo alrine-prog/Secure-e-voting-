@@ -18,30 +18,30 @@ export default function ObserverDashboardPage() {
   ]);
 
   return (
-    <div className="min-h-screen bg-slate-900 text-slate-100 flex flex-col font-sans">
+    <div className="min-h-screen bg-slate-900 text-slate-100 flex flex-col font-sans"/>
       {/* TOP NAVIGATION HEADER */}
-      <nav className="top-nav flex items-center justify-between w-full px-6 py-4 bg-slate-900 border-b border-slate-800 text-white sticky top-0 z-50">
+      <nav className="top-nav flex items-center justify-between w-full px-6 py-4 bg-slate-900 border-b border-slate-800 text-white sticky top-0 z-50"/>
         <div className="flex items-center gap-6">
           <Link href="/" legacyBehavior>
-            <a className="font-bold text-lg text-white hover:text-orange-400 transition">
+            <a className="font-bold text-lg text-white hover:text-orange-400 transition"/>
               Observer Portal
             </a>
           </Link>
-          <Link href="/observer/live-tally" legacyBehavior>
+          <Link href="/observer/live-tally" legacyBehavior/>
             <a className="text-sm text-slate-300 hover:text-white transition">Live Tally</a>
           </Link>
-          <Link href="/about" legacyBehavior>
+          <Link href="/about" legacyBehavior/>
             <a className="text-sm text-slate-300 hover:text-white transition hidden md:inline-block">About</a>
           </Link>
         </div>
 
-        <div className="flex items-center gap-4">
-          <span className="flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+        <div className="flex items-center gap-4"/>
+          <span className="flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"/>
             <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
             Monitoring Active
           </span>
           <Link href="/login?role=observer" legacyBehavior>
-            <a className="px-3 py-1.5 text-xs font-semibold rounded-md border border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-200 transition">
+            <a className="px-3 py-1.5 text-xs font-semibold rounded-md border border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-200 transition"/>
               Switch User
             </a>
           </Link>
@@ -49,13 +49,13 @@ export default function ObserverDashboardPage() {
       </nav>
 
       {/* DASHBOARD CONTENT */}
-      <main className="flex-grow max-w-7xl w-full mx-auto p-6 md:p-10 space-y-8">
+      <main className="flex-grow max-w-7xl w-full mx-auto p-6 md:p-10 space-y-8"/>
         
         {/* HEADER SECTION */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-6">
           <div>
             <h1 className="text-3xl font-extrabold text-white tracking-tight">Observer Dashboard</h1>
-            <p className="text-slate-400 text-sm mt-1">
+            <p className="text-slate-400 text-sm mt-1"</p>
               Independent monitoring portal for election auditing, integrity checks, and live tallies.
             </p>
           </div>
@@ -71,7 +71,7 @@ export default function ObserverDashboardPage() {
         </div>
 
         {/* SUMMARY STATS GRID */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4/>
           <div className="p-5 bg-slate-800/60 border border-slate-800 rounded-xl">
             <span className="text-xs uppercase font-bold text-slate-400 tracking-wider">Total Ballots Audited</span>
             <div className="text-3xl font-extrabold text-white mt-2">14,660</div>
