@@ -84,4 +84,36 @@ export default function VoterIndexPage() {
                 </a>
               </Link>
               <Link href="/support" legacyBehavior>
-                <a className="text-sm text-slate-30
+                <a className="text-sm text-slate-300 hover:text-white transition">
+                  Support
+                </a>
+              </Link>
+            </div>
+          </div>
+
+          {/* Right Aligned Section */}
+          <div className="flex items-center gap-2 sm:gap-4">
+            <Link href="/observer/live-tally" legacyBehavior>
+              <a className="px-2.5 sm:px-3 py-1.5 text-xs font-semibold rounded-md border border-orange-500/30 bg-orange-500/10 text-orange-400 hover:bg-orange-500/20 transition flex items-center gap-1.5 sm:gap-2">
+                <span className="h-2 w-2 rounded-full bg-orange-400 animate-pulse" />
+                <span className="hidden sm:inline">Live Tally</span>
+                <span className="sm:hidden">Live</span>
+              </a>
+            </Link>
+
+            {isAuthenticated ? (
+              <button
+                onClick={() => setIsAuthenticated(false)}
+                className="px-3 py-1.5 text-xs font-medium rounded-md bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition"
+              >
+                Sign Out
+              </button>
+            ) : (
+              /* Dropdown Menu Container */
+              <div className="relative">
+                <button
+                  onClick={() => setIsAccountMenuOpen(!isAccountMenuOpen)}
+                  className="px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium rounded-md bg-purple-600 hover:bg-purple-700 text-white shadow transition flex items-center gap-1.5 sm:gap-2"
+                >
+                  <span>Sign In / Register</span>
+                  <svg
