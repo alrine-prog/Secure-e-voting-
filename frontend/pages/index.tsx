@@ -285,4 +285,3 @@ export default function VoterIndexPage() {
     </div>
   );
 }
-Do for me some adjustments where this page serve only as Home page with photo that talk about the system    and the hide login link on button menu
