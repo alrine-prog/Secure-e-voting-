@@ -2,30 +2,8 @@ import Link from 'next/link';
 import Nav from '../../components/Nav';
 
 export default function VoterDashboard() {
-  return (
-    <div className="container">
-      <Nav />
-      <h2>Voter Portal</h2>
-      <p>Welcome — here you can view active elections and cast your vote when eligible.</p>
-
-      <section style={{ marginTop: 18, display: 'grid', gap: 12 }}>
-        <div style={{ padding: 16, border: '1px solid #e5e7eb', borderRadius: 8 }}>
-          <h3>Active Elections</h3>
-          <p>No active elections found. When an election is published it will appear here.</p>
-          <Link href="/voter/elections"><a>View elections</a></Link>
-        </div>
-
-        <div style={{ padding: 16, border: '1px solid #e5e7eb', borderRadius: 8 }}>
-          <h3>My Ballots</h3>
-          <p>Access ballots you are eligible for and view voting status.</p>
-          <Link href="/voter/ballots"><a>View ballots</a></Link>
-        </div>
-      </section>
-
-      <section style={{ marginTop: 28 }}>
-        <h3>Support</h3>
-        <p>If you have trouble logging in or accessing an election, contact your institution's election office via the Contact page.</p>
-      </section>
-    </div>
-  );
+  return <div className="dashboard-page"><Nav userRole="voter" /><main className="dashboard-main"><header className="dashboard-heading"><div><span className="dashboard-kicker">Your voting workspace</span><h1>Voter portal</h1><p>Check election availability and access ballots you’re eligible to cast.</p></div><span className="dashboard-role">Voter</span></header>
+    <section className="dashboard-stat-grid"><article className="dashboard-stat"><span>Participation</span><strong>Ready when you are</strong><small>Check for active elections</small></article><article className="dashboard-stat"><span>Ballot privacy</span><strong>Vote privately</strong><small>Follow your institution’s election guidance</small></article><article className="dashboard-stat"><span>Need assistance?</span><strong>Support is available</strong><small>Contact your election office</small></article></section>
+    <div className="dashboard-grid dashboard-grid-two"><section className="dashboard-card voter-action-card"><span className="dashboard-card-icon">01</span><span className="dashboard-kicker">Find an election</span><h2>Active elections</h2><p className="dashboard-muted">Elections published for your institution will be available here.</p><Link className="dashboard-button dashboard-button-link" href="/voter/elections">View elections <span>→</span></Link></section><section className="dashboard-card voter-action-card"><span className="dashboard-card-icon">02</span><span className="dashboard-kicker">Your participation</span><h2>My ballots</h2><p className="dashboard-muted">Access ballots you are eligible for and review their current status.</p><Link className="dashboard-button dashboard-button-link" href="/voter/ballots">View my ballots <span>→</span></Link></section></div>
+    <section className="dashboard-help"><div><span className="dashboard-kicker">Questions?</span><h2>Contact your election office</h2><p>For help signing in or accessing an election, reach out to your institution’s election team.</p></div><Link href="/contact">Contact support →</Link></section></main><footer className="dashboard-footer">Secure E-Voting · Voter portal</footer></div>;
 }
