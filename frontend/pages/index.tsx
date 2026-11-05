@@ -67,10 +67,12 @@ export default function HomePage() {
         <section className="campus-logo-section" aria-labelledby="campus-logo-title">
           <p id="campus-logo-title">Designed for the communities that shape campus life</p>
           <div className="campus-logo-list">
-            {communityTypes.map((community) => <div className="campus-logo" key={community.name}>
-              <span className="campus-logo-mark" aria-hidden="true">{community.mark}</span>
-              <span>{community.name}</span>
-            </div>)}
+            {communityTypes.map((community) => (
+              <div className="campus-logo" key={community.name}>
+                <span className="campus-logo-mark" aria-hidden="true">{community.mark}</span>
+                <span>{community.name}</span>
+              </div>
+            ))}
           </div>
         </section>
 
