@@ -1,13 +1,9 @@
 import express from 'express';
-import { requireAuth, requireAnyRole } from '../utils/jwtMiddleware';
+import { requireAuth, requireAnyRole, requireUniversityAccess } from '../utils/jwtMiddleware';
 import { createStaffHandler, registerVoterHandler } from '../controllers/staffController';
 
 const router = express.Router();
-
-// Create staff (only university_admin)
-router.post('/:universityId/staff', requireAuth, requireAnyRole(['university_admin']), createStaffHandler);
-
-// Register voter (staff or university_admin)
-router.post('/:universityId/voters', requireAuth, requireAnyRole(['staff','university_admin']), registerVoterHandler);
+router.post('/:universityId/staff', requireAuth, requireRole('university_admin'), requireUniversityAccess, createStaffHandler);
+router.post('/:universityId/voters', requireAuth, requireAnyRole(['staff', 'university_admin']), requireUniversityAccess, registerVoterHandler);
 
 export default router;

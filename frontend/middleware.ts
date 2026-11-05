@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 const ROLE_PATHS: Array<[string, string[]]> = [
   ['/admin/university/pending', ['system_owner']],
   ['/system_owner', ['system_owner']],
+  ['/system-owner', ['system_owner']],
   ['/admin', ['uni_admin', 'university_admin']],
   ['/staff', ['staff']],
   ['/voter', ['voter']],
@@ -22,9 +23,16 @@ export function middleware(req: NextRequest) {
     return NextResponse.redirect(login);
   }
 
-  const role = getRole(token);
-  if (!role || !match[1].includes(role)) return NextResponse.redirect(new URL('/unauthorized', req.url));
+  const role = normalizeRole(getRole(token));
+  if (!role || !match[1].some((allowedRole) => normalizeRole(allowedRole) === role)) {
+    return NextResponse.redirect(new URL('/unauthorized', req.url));
+  }
   return NextResponse.next();
+}
+
+function normalizeRole(role: string | null): string | null {
+  if (role === 'university_admin') return 'uni_admin';
+  return role;
 }
 
 function getRole(token: string): string | null {
@@ -34,7 +42,11 @@ function getRole(token: string): string | null {
     const base64 = encoded.replace(/-/g, '+').replace(/_/g, '/');
     const payload = JSON.parse(atob(base64));
     return typeof payload.role === 'string' ? payload.role : null;
-  } catch { return null; }
+  } catch {
+    return null;
+  }
 }
 
-export const config = { matcher: ['/system_owner/:path*', '/admin/:path*', '/staff/:path*', '/voter/:path*', '/observer/:path*'] };
+export const config = {
+  matcher: ['/system_owner/:path*', '/system-owner/:path*', '/admin/:path*', '/staff/:path*', '/voter/:path*', '/observer/:path*'],
+};

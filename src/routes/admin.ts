@@ -1,24 +1,18 @@
 import express from 'express';
 import { approveVoterHandler, notifyApprovedVotersHandler } from '../controllers/voterController.js';
-import { requireAuth, requireRole } from '../utils/jwtMiddleware.js';
+import { requireAuth, requireRole, requireUniversityAccess } from '../utils/jwtMiddleware.js';
 import { listPendingUniversitiesHandler, approveUniversityHandler, rejectUniversityHandler, getUniversitySummaryHandler } from '../controllers/adminController.js';
 
 const router = express.Router();
 
-// System owner: list pending universities
+// System owner: university registration approval only.
 router.get('/universities/pending', requireAuth, requireRole('system_owner'), listPendingUniversitiesHandler);
-
-// System owner: approve/reject university
 router.post('/universities/:universityId/approve', requireAuth, requireRole('system_owner'), approveUniversityHandler);
 router.post('/universities/:universityId/reject', requireAuth, requireRole('system_owner'), rejectUniversityHandler);
 
-// University admin: approve a voter
-router.post('/universities/:universityId/voters/:voterId/approve', requireAuth, requireRole('university_admin'), approveVoterHandler);
-
-// University admin: notify approved voters for an election
-router.post('/universities/:universityId/elections/:electionId/notify', requireAuth, requireRole('university_admin'), notifyApprovedVotersHandler);
-
-// Admin dashboard: summary for a university (university_admin or system_owner)
-router.get('/universities/:universityId/summary', requireAuth, requireRole('university_admin'), getUniversitySummaryHandler);
+// University administrators can only act within their own university.
+router.post('/universities/:universityId/voters/:voterId/approve', requireAuth, requireRole('university_admin'), requireUniversityAccess, approveVoterHandler);
+router.post('/universities/:universityId/elections/:electionId/notify', requireAuth, requireRole('university_admin'), requireUniversityAccess, notifyApprovedVotersHandler);
+router.get('/universities/:universityId/summary', requireAuth, requireRole('university_admin'), requireUniversityAccess, getUniversitySummaryHandler);
 
 export default router;
