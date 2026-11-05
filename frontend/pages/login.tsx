@@ -1,12 +1,22 @@
 import { useRouter } from 'next/router';
 import { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
+import { redirectUserByRole } from '../lib/api';
 
 export default function LoginPage() {
   const router = useRouter();
+
   const role = useMemo(() => {
     const value = router.query.role;
-    if (typeof value === 'string') return value.toLowerCase();
+    if (typeof value === 'string') {
+      const normalized = value.toLowerCase();
+      if (normalized === 'admin') return 'uni_admin';
+      if (normalized === 'system_owner') return 'system_owner';
+      if (normalized === 'uni_admin') return 'uni_admin';
+      if (normalized === 'staff') return 'staff';
+      if (normalized === 'voter') return 'voter';
+      if (normalized === 'observer') return 'observer';
+    }
     return 'voter';
   }, [router.query.role]);
 
@@ -15,14 +25,18 @@ export default function LoginPage() {
   const [err, setErr] = useState('');
 
   const roleLabel = {
+    system_owner: 'System Owner',
+    uni_admin: 'University Admin',
+    staff: 'Staff',
     voter: 'Voter',
-    admin: 'Admin',
-    staff: 'Staff'
+    observer: 'Observer',
   }[role] || 'Voter';
 
   useEffect(() => {
-    if (role === 'admin') setEmail('admin@securevoting.test');
+    if (role === 'system_owner') setEmail('systemowner@securevoting.test');
+    else if (role === 'uni_admin') setEmail('admin@securevoting.test');
     else if (role === 'staff') setEmail('staff@securevoting.test');
+    else if (role === 'observer') setEmail('observer@securevoting.test');
     else setEmail('voter@securevoting.test');
   }, [role]);
 
@@ -43,14 +57,8 @@ export default function LoginPage() {
       return;
     }
 
-    const user = data?.user;
-    if (user?.role === 'system_owner' || user?.role === 'university_admin') {
-      router.push('/admin');
-    } else if (user?.role === 'staff') {
-      router.push('/staff');
-    } else {
-      router.push('/voter');
-    }
+    const userRole = data?.user?.role || role;
+    redirectUserByRole(userRole, router);
   };
 
   return (
