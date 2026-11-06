@@ -4,20 +4,22 @@ import { sendSmsViaTwilio } from './smsService';
 
 type Notification = { to: string; subject?: string; text: string };
 
-const SENDGRID_KEY = process.env.SENDGRID_API_KEY;
-const SMTP_HOST = process.env.SMTP_HOST;
-if (SENDGRID_KEY) sgMail.setApiKey(SENDGRID_KEY as string);
-
+// Read environment configuration when each message is sent. The server imports
+// route modules before dotenv.config() runs, so capturing env values at module load
+// makes configured mail providers appear missing.
 export const sendEmail = async (to: string, subject: string, text: string) => {
-  if (SENDGRID_KEY) {
+  const sendgridKey = process.env.SENDGRID_API_KEY;
+  if (sendgridKey) {
+    sgMail.setApiKey(sendgridKey);
     await sgMail.send({ to, from: process.env.EMAIL_FROM || 'no-reply@example.com', subject, text });
     return;
   }
-  if (SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
+  const smtpHost = process.env.SMTP_HOST;
+  if (smtpHost && process.env.SMTP_USER && process.env.SMTP_PASS) {
     const transporter = nodemailer.createTransport({
-      host: SMTP_HOST,
+      host: smtpHost,
       port: Number(process.env.SMTP_PORT || 587),
-      secure: false,
+      secure: Number(process.env.SMTP_PORT || 587) === 465,
       auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS }
     });
     await transporter.sendMail({ from: process.env.EMAIL_FROM || 'no-reply@example.com', to, subject, text });
@@ -30,24 +32,21 @@ export const sendEmail = async (to: string, subject: string, text: string) => {
   console.log('------------------------');
 };
 
-// Credential-bearing email must never be written to logs as a fallback.
+// Never log credential-bearing messages if delivery configuration is missing.
 export const sendCredentialEmail = async (notification: Notification) => {
-  const configured = Boolean(SENDGRID_KEY || (SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS));
+  const configured = Boolean(process.env.SENDGRID_API_KEY || (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS));
   if (!configured) throw new Error('Email delivery is not configured.');
   await sendEmail(notification.to, notification.subject || 'Account credentials', notification.text);
 };
 
 export const sendSms = async (to: string, text: string) => {
   try { await sendSmsViaTwilio(to, text); }
-  catch (err: any) {
-    console.log('--- sms (fallback) ---');
-    console.log(`to: ${to}`);
-    console.log(text);
-    console.log('----------------------');
+  catch (error) {
+    console.error('SMS delivery failed:', error);
   }
 };
 
-export const sendNotificationToContact = async (n: Notification) => {
-  if (n.to.includes('@')) await sendEmail(n.to, n.subject || 'Notification', n.text);
-  else await sendSms(n.to, n.text);
+export const sendNotificationToContact = async (notification: Notification) => {
+  if (notification.to.includes('@')) await sendEmail(notification.to, notification.subject || 'Notification', notification.text);
+  else await sendSms(notification.to, notification.text);
 };
