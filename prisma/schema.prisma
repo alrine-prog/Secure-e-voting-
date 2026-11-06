@@ -7,14 +7,11 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// ==========================================
-// ENUMS
-// ==========================================
-
 enum UserRole {
   system_owner
   university_admin
   staff
+  observer
   voter
 }
 
@@ -30,10 +27,6 @@ enum ElectionStatus {
   closed
   archived
 }
-
-// ==========================================
-// MODELS
-// ==========================================
 
 model University {
   id           String           @id @default(uuid())
@@ -113,8 +106,23 @@ model Election {
 
   voteTokens VoteToken[]
   votes      Vote[]
+  candidates Candidate[]
 
   @@index([universityId, status])
+}
+
+model Candidate {
+  id          String   @id @default(uuid())
+  election    Election @relation(fields: [electionId], references: [id], onDelete: Cascade)
+  electionId  String
+  name        String
+  position    String
+  description String?
+  votes       Vote[]
+  createdAt   DateTime @default(now())
+
+  @@unique([electionId, position, name])
+  @@index([electionId, position])
 }
 
 model VoteToken {
@@ -132,14 +140,17 @@ model VoteToken {
 }
 
 model Vote {
-  id         String   @id @default(uuid())
-  election   Election @relation(fields: [electionId], references: [id], onDelete: Cascade)
-  electionId String
-  candidate  String
-  tokenHash  String
-  createdAt  DateTime @default(now())
+  id          String     @id @default(uuid())
+  election    Election   @relation(fields: [electionId], references: [id], onDelete: Cascade)
+  electionId  String
+  candidate   String
+  candidateId String?
+  candidateRef Candidate? @relation(fields: [candidateId], references: [id], onDelete: SetNull)
+  tokenHash   String
+  createdAt   DateTime   @default(now())
 
   @@index([electionId])
+  @@index([candidateId])
 }
 
 model PasswordResetOtp {
