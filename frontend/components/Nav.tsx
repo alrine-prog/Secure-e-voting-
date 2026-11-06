@@ -8,38 +8,63 @@ interface NavProps {
 export default function Nav({ userRole }: NavProps) {
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    const handleClick = (event: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) setOpen(false);
-    };
-    document.addEventListener('click', handleClick);
-    return () => document.removeEventListener('click', handleClick);
-  }, []);
-
   const isUniversityAdmin = userRole === 'uni_admin' || userRole === 'university_admin';
 
+  useEffect(() => {
+    const handlePointerDown = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) setOpen(false);
+    };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setOpen(false);
+    };
+    document.addEventListener('mousedown', handlePointerDown);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', handlePointerDown);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
+
+  const closeMenu = () => setOpen(false);
+
   return (
-    <nav className="top-nav flex items-center justify-between w-full relative px-6 py-4 bg-slate-900 text-white" aria-label="Main navigation">
-      <div className="nav-links flex items-center gap-6">
-        <Link href="/" className="nav-brand" aria-label="Secure E-Voting home"><span className="nav-brand-mark" aria-hidden="true">✓</span><span>Secure<span className="nav-brand-accent">Vote</span></span></Link>
-        <Link href="/">Home</Link><Link href="/about">About us</Link><Link href="/policies">Policies</Link><Link href="/contact">Support</Link>
+    <nav className="top-nav" aria-label="Main navigation">
+      <div className="nav-links">
+        <Link href="/" className="nav-brand" aria-label="Secure E-Voting home" onClick={closeMenu}>
+          <span className="nav-brand-mark" aria-hidden="true">✓</span>
+          <span>Secure<span className="nav-brand-accent"> E-Voting</span></span>
+        </Link>
+        <Link href="/" onClick={closeMenu}>Home</Link>
+        <Link href="/about" onClick={closeMenu}>About</Link>
+        <Link href="/policies" onClick={closeMenu}>Policies</Link>
+        <Link href="/contact" onClick={closeMenu}>Support</Link>
       </div>
-      <div className="menu-wrap relative flex items-center gap-4 ml-auto" ref={menuRef}>
-        {userRole === 'system_owner' && <Link href="/admin/university/pending" className="text-yellow-400 font-medium">University approvals</Link>}
-        {isUniversityAdmin && <Link href="/admin" className="text-blue-400 font-medium">Admin dashboard</Link>}
-        {userRole === 'staff' && <Link href="/staff" className="text-green-400 font-medium">Staff dashboard</Link>}
-        {userRole === 'voter' && <Link href="/voter" className="text-purple-400 font-medium">Voter portal</Link>}
-        {userRole === 'observer' && <Link href="/observer/dashboard" className="text-orange-400 font-medium">Observer dashboard</Link>}
-        <button type="button" className="menu-button px-3 py-1 border rounded hover:bg-slate-800 focus:outline-none" onClick={() => setOpen((prev) => !prev)} aria-label="Open sign-in and registration menu" aria-expanded={open} aria-haspopup="true">⋯</button>
-        {open && <div className="login-menu absolute right-0 top-full mt-2 w-48 bg-white text-gray-800 border rounded shadow-lg flex flex-col py-2 z-50" role="menu">
-          <span className="px-4 py-1 text-xs text-gray-400 font-bold uppercase tracking-wider">Sign in to your account</span>
-          <Link href="/login?role=system_owner" role="menuitem" onClick={() => setOpen(false)}>System owner</Link>
-          <Link href="/login?role=uni_admin" role="menuitem" onClick={() => setOpen(false)}>University administrator</Link>
-          <Link href="/login?role=staff" role="menuitem" onClick={() => setOpen(false)}>Election staff</Link>
-          <Link href="/login?role=voter" role="menuitem" onClick={() => setOpen(false)}>Voter</Link>
-          <Link href="/login?role=observer" role="menuitem" onClick={() => setOpen(false)}>Observer</Link>
-          <Link href="/register-university" role="menuitem" className="nav-register-link" onClick={() => setOpen(false)}>Register your university</Link>
+
+      <div className="menu-wrap" ref={menuRef}>
+        {userRole === 'system_owner' && <Link href="/admin/university/pending" className="nav-role-link" onClick={closeMenu}>University approvals</Link>}
+        {isUniversityAdmin && <Link href="/admin" className="nav-role-link" onClick={closeMenu}>Admin dashboard</Link>}
+        {userRole === 'staff' && <Link href="/staff" className="nav-role-link" onClick={closeMenu}>Staff dashboard</Link>}
+        {userRole === 'voter' && <Link href="/voter" className="nav-role-link" onClick={closeMenu}>Voter portal</Link>}
+        {userRole === 'observer' && <Link href="/observer/dashboard" className="nav-role-link" onClick={closeMenu}>Observer dashboard</Link>}
+        <button
+          type="button"
+          className="menu-button"
+          onClick={() => setOpen((previous) => !previous)}
+          aria-label={open ? 'Close account menu' : 'Open account menu'}
+          aria-expanded={open}
+          aria-controls="account-dropdown"
+          aria-haspopup="menu"
+        >
+          <span aria-hidden="true">•••</span>
+        </button>
+        {open && <div className="login-menu" id="account-dropdown" role="menu" aria-label="Account options">
+          <span className="login-menu-heading">Sign in to your account</span>
+          <Link href="/login?role=system_owner" role="menuitem" onClick={closeMenu}>System owner</Link>
+          <Link href="/login?role=uni_admin" role="menuitem" onClick={closeMenu}>University administrator</Link>
+          <Link href="/login?role=staff" role="menuitem" onClick={closeMenu}>Election staff</Link>
+          <Link href="/login?role=voter" role="menuitem" onClick={closeMenu}>Voter</Link>
+          <Link href="/login?role=observer" role="menuitem" onClick={closeMenu}>Observer</Link>
+          <Link href="/register-university" role="menuitem" className="nav-register-link" onClick={closeMenu}>Register your university</Link>
         </div>}
       </div>
     </nav>
