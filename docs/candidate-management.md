@@ -1,16 +1,7 @@
-# Candidate profile management
+# Candidate profiles and voting
 
-University administrators can manage candidate profiles at `/admin/candidates`. Create or select an election, then add or edit the candidate's full name, position, faculty, college, party, symbol, optional photo, and additional details.
+University administrators can manage candidate profiles at `/admin/candidates`, linked from the admin navigation. Candidate profiles can be edited with a new image upload or by retaining the current photo.
 
-## Database setup
+Voters see current open elections at `/voter`, review candidate profiles, choose one candidate per election, enter their single-use voting token, and submit. The candidate listing is restricted to authenticated voters and their university. The server verifies that the chosen candidate belongs to the election and that the token is unused and belongs to an approved voter at that university.
 
-After updating the code, regenerate Prisma Client and apply the schema to the configured PostgreSQL database:
-
-```bash
-npx prisma generate
-npx prisma db push
-```
-
-## Candidate photos
-
-Candidate image uploads are limited to JPEG, PNG, or WebP and 5 MB. They are stored under `uploads/candidates` and served through `/elections/candidate-photos/:filename`. For production deployments, persist this directory across deploys or replace local disk storage with a durable object-storage provider.
+Candidate image uploads are limited to JPEG, PNG, or WebP and 5 MB and stored under `uploads/candidates`. In production, persist that directory across deployments or configure durable object storage.

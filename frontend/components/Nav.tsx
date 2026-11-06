@@ -27,11 +27,11 @@ export default function Nav({ userRole }: NavProps) {
       </div>
       <div className="menu-wrap relative flex items-center gap-4 ml-auto" ref={menuRef}>
         {userRole === 'system_owner' && <Link href="/admin/university/pending" className="text-yellow-400 font-medium">University approvals</Link>}
-        {isUniversityAdmin && <Link href="/admin" className="text-blue-400 font-medium">Admin dashboard</Link>}
+        {isUniversityAdmin && <><Link href="/admin" className="text-blue-400 font-medium">Admin dashboard</Link><Link href="/admin/candidates" className="text-blue-300 font-medium">Candidates &amp; positions</Link></>}
         {userRole === 'staff' && <Link href="/staff" className="text-green-400 font-medium">Staff dashboard</Link>}
         {userRole === 'voter' && <Link href="/voter" className="text-purple-400 font-medium">Voter portal</Link>}
         {userRole === 'observer' && <Link href="/observer/dashboard" className="text-orange-400 font-medium">Observer dashboard</Link>}
-        <button type="button" className="menu-button px-3 py-1 border rounded hover:bg-slate-800 focus:outline-none" onClick={() => setOpen((prev) => !prev)} aria-label="Open sign-in and registration menu" aria-expanded={open} aria-haspopup="true">⋯</button>
+        <button type="button" className="menu-button px-3 py-1 border rounded hover:bg-slate-800 focus:outline-none" onClick={() => setOpen((prev) => !prev)} aria-label="Open sign-in and registration menu" aria-expanded={open}>☰</button>
         {open && <div className="login-menu absolute right-0 top-full mt-2 w-48 bg-white text-gray-800 border rounded shadow-lg flex flex-col py-2 z-50" role="menu">
           <span className="px-4 py-1 text-xs text-gray-400 font-bold uppercase tracking-wider">Sign in to your account</span>
           <Link href="/login?role=system_owner" role="menuitem" onClick={() => setOpen(false)}>System owner</Link>
