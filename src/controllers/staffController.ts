@@ -71,12 +71,23 @@ export const registerVoterHandler = async (req: Request, res: Response) => {
       phone,
       faculty,
       college,
-      yearOfStudy
+      yearOfStudy,
+      username,
+      password
     } = req.body;
 
     if (!firstName || !secondName) {
       return res.status(400).json({ error: 'firstName and secondName are required' });
     }
+    if (!email || !username || !password) {
+      return res.status(400).json({ error: 'email, username and password are required for the voter login account' });
+    }
+
+    const normalizedEmail = String(email).trim();
+    const existingUser = await prisma.user.findUnique({ where: { email: normalizedEmail } });
+    if (existingUser) return res.status(409).json({ error: 'A user account already exists with that email.' });
+
+    const passwordHash = await bcrypt.hash(password, 10);
 
     const voter = await prisma.voter.create({
       data: {
@@ -86,7 +97,7 @@ export const registerVoterHandler = async (req: Request, res: Response) => {
         nationalId: nationalId || null,
         firstName,
         secondName,
-        email: email || null,
+        email: normalizedEmail,
         phone: phone || null,
         faculty: faculty || null,
         college: college || null,
@@ -95,16 +106,31 @@ export const registerVoterHandler = async (req: Request, res: Response) => {
       }
     });
 
+    const voterUser = await prisma.user.create({
+      data: {
+        universityId,
+        role: 'voter',
+        username,
+        firstName,
+        secondName,
+        email: normalizedEmail,
+        phone: phone || null,
+        passwordHash,
+        isActive: true
+      }
+    });
+
     await prisma.auditLog.create({
       data: {
         userId: auth.userId,
         action: 'register_voter',
         resourceType: 'voter',
-        resourceId: voter.id
+        resourceId: voter.id,
+        details: { voterUserId: voterUser.id } as any
       }
     });
 
-    return res.json({ success: true, voter: { id: voter.id, firstName, secondName, approved: false } });
+    return res.json({ success: true, voter: { id: voter.id, firstName, secondName, approved: false, email: normalizedEmail } });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ error: 'Internal server error' });
