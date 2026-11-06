@@ -1,9 +1,14 @@
 export const apiFetch = async (path: string, opts: RequestInit = {}) => {
   const base = process.env.NEXT_PUBLIC_API_BASE || '';
+  const isFormData = typeof FormData !== 'undefined' && opts.body instanceof FormData;
+  const headers = {
+    ...(!isFormData ? { 'Content-Type': 'application/json' } : {}),
+    ...(opts.headers || {}),
+  };
   const res = await fetch(base + path, {
     credentials: 'include',
-    headers: { 'Content-Type': 'application/json', ...(opts.headers || {}) },
-    ...opts
+    headers,
+    ...opts,
   });
   const text = await res.text();
   try {

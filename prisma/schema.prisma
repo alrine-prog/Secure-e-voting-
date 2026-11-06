@@ -105,6 +105,7 @@ model Election {
   createdAt    DateTime       @default(now())
   updatedAt    DateTime       @updatedAt
 
+  candidates Candidate[]
   voteTokens VoteToken[]
   votes      Vote[]
   candidates Candidate[]
@@ -116,14 +117,20 @@ model Candidate {
   id          String   @id @default(uuid())
   election    Election @relation(fields: [electionId], references: [id], onDelete: Cascade)
   electionId  String
-  name        String
+  fullName    String
   position    String
+  faculty     String
+  college     String
+  party       String
+  symbol      String
+  photoUrl    String?
   description String?
-  votes       Vote[]
+  // Kept in sync with fullName for existing results and integrations.
+  name        String?
   createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
-  @@unique([electionId, position, name])
-  @@index([electionId, position])
+  @@index([electionId])
 }
 
 model VoteToken {
