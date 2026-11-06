@@ -1,4 +1,4 @@
-import express, { Request, Response, NextFunction } from 'express';
+import express, { Request, Response } from 'express';
 import dotenv from 'dotenv';
 import helmet from 'helmet';
 import morgan from 'morgan';
@@ -14,6 +14,7 @@ import universityRouter from './routes/university';
 import staffRouter from './routes/staff';
 import electionsRouter from './routes/elections';
 import votingRouter from './routes/voting';
+import observerRouter from './routes/observer';
 import csvRouter from './routes/csv';
 import supportRouter from './routes/support';
 import { seedSystemOwner } from './seed';
@@ -45,6 +46,7 @@ nextApp.prepare().then(async () => {
   app.use('/support', supportRouter);
   app.use('/elections', electionsRouter);
   app.use('/voting', votingRouter);
+  app.use('/observer', observerRouter);
 
   setupSwagger(app);
   app.get('/health', (_req: Request, res: Response) => res.json({ status: 'ok' }));
