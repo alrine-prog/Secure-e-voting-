@@ -1,5 +1,5 @@
 import express from 'express';
-import { loginHandler, forgotPasswordHandler, resetPasswordHandler, logoutHandler } from '../controllers/authController';
+import { changePasswordHandler, loginHandler, forgotPasswordHandler, resetPasswordHandler, logoutHandler } from '../controllers/authController';
 import { createRateLimiter } from '../middleware/rateLimiters';
 import { requireAuth } from '../utils/jwtMiddleware';
 
@@ -8,6 +8,7 @@ const router = express.Router();
 
 router.post('/login', loginLimiter, loginHandler);
 router.get('/me', requireAuth, (req, res) => res.json({ user: (req as any).user }));
+router.post('/change-password', requireAuth, changePasswordHandler);
 router.post('/logout', logoutHandler);
 router.post('/forgot-password', forgotPasswordHandler);
 router.post('/reset-password', resetPasswordHandler);

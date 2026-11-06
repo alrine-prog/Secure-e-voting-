@@ -1,4 +1,4 @@
-import express, { Request, Response } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import dotenv from 'dotenv';
 import helmet from 'helmet';
 import morgan from 'morgan';
@@ -37,7 +37,6 @@ nextApp.prepare().then(async () => {
   app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 200 }));
   const FRONTEND_URL = process.env.FRONTEND_URL || `http://localhost:${port}`;
   app.use(cors({ origin: FRONTEND_URL, credentials: true }));
-
   app.use('/auth', authRouter);
   app.use('/universities', universityRouter);
   app.use('/admin', adminRouter);
@@ -47,12 +46,10 @@ nextApp.prepare().then(async () => {
   app.use('/elections', electionsRouter);
   app.use('/voting', votingRouter);
   app.use('/observer', observerRouter);
-
   setupSwagger(app);
   app.get('/health', (_req: Request, res: Response) => res.json({ status: 'ok' }));
   app.all('*', (req: Request, res: Response) => nextHandler(req, res));
   app.use(errorHandler);
-
   await seedSystemOwner();
   app.listen(port, () => console.log(`> Server running on port ${port} in ${dev ? 'development' : 'production'} mode`));
 }).catch((err) => {
