@@ -2,80 +2,54 @@ import { Request, Response } from 'express';
 import prisma from '../prismaClient';
 import { sendNotificationToContact } from '../services/notificationService';
 
-// Approve a voter and send them a notification
 export const approveVoterHandler = async (req: Request, res: Response) => {
   const universityId = req.params.universityId as string;
   const voterId = req.params.voterId as string;
-  const adminUserId = (req as any).auth?.userId || 'unknown';
-
+  const adminUserId = (req as any).auth?.userId || null;
   try {
     const voter = await prisma.voter.findUnique({ where: { id: voterId } });
-    if (!voter) return res.status(404).json({ error: 'Voter not found' });
-    if (voter.universityId !== universityId) return res.status(400).json({ error: 'Voter does not belong to the university' });
-
-    const updated = await prisma.voter.update({
-      where: { id: voterId },
-      data: { approved: true }
-    });
-
-    // send notification to the voter (email or SMS depending on available contact)
+    if (!voter || voter.universityId !== universityId) return res.status(404).json({ error: 'Voter not found for this university.' });
+    const updated = await prisma.voter.update({ where: { id: voterId }, data: { approved: true } });
     const contact = updated.email || updated.phone;
-    if (contact) {
-      await sendNotificationToContact({
-        to: contact,
-        subject: 'You have been approved to vote',
-        text: `Hello ${updated.firstName},\n\nYou have been approved to participate in upcoming elections at ${universityId}.\n\nRegards,\nUniversity Admin`
-      });
-    }
-
+    if (contact) await sendNotificationToContact({ to: contact, subject: 'You have been approved to vote', text: `Hello ${updated.firstName},\n\nYou have been approved to participate in upcoming elections at your university.\n\nRegards,\nUniversity Admin` });
     await prisma.auditLog.create({ data: { userId: adminUserId, action: 'approve_voter', resourceType: 'voter', resourceId: voterId } });
-
     return res.json({ success: true, voter: { id: updated.id, approved: updated.approved } });
-  } catch (err) {
-    console.error(err);
+  } catch (error) {
+    console.error(error);
     return res.status(500).json({ error: 'Internal server error' });
   }
 };
 
-// Notify all approved voters for a given election
 export const notifyApprovedVotersHandler = async (req: Request, res: Response) => {
   const universityId = req.params.universityId as string;
   const electionId = req.params.electionId as string;
-  const { subject, message, channel } = req.body; // channel optional: 'email' or 'sms' or 'both'
-  const adminUserId = (req as any).auth?.userId || 'unknown';
-
-  if (!subject || !message) return res.status(400).json({ error: 'subject and message are required' });
-
+  const auth = (req as any).auth;
   try {
-    // Verify election belongs to university
-    const election = await prisma.election.findUnique({ where: { id: electionId } });
-    if (!election) return res.status(404).json({ error: 'Election not found' });
-    if (election.universityId !== universityId) return res.status(400).json({ error: 'Election does not belong to the university' });
-
-    const approvedVoters = await prisma.voter.findMany({ where: { universityId, approved: true } });
-
-    const results: Array<{ voterId: string; sentTo?: string; error?: string }> = [];
-
-    for (const v of approvedVoters) {
-      const contactMethods = [] as string[];
-      if ((channel === 'email' || channel === 'both' || !channel) && v.email) contactMethods.push(v.email);
-      if ((channel === 'sms' || channel === 'both' || !channel) && v.phone) contactMethods.push(v.phone!);
-
-      for (const c of contactMethods) {
-        try {
-          await sendNotificationToContact({ to: c, subject, text: message });
-          results.push({ voterId: v.id, sentTo: c });
-        } catch (e: any) {
-          results.push({ voterId: v.id, error: e.message || 'failed to send' });
-        }
+    const election = await prisma.election.findUnique({ where: { id: electionId }, include: { university: { select: { name: true } } } });
+    if (!election || election.universityId !== universityId) return res.status(404).json({ error: 'Election not found for this university.' });
+    if (election.status === 'closed' || election.endAt <= new Date()) return res.status(400).json({ error: 'Cannot send an upcoming-election notice for a closed/past election.' });
+    const subject = typeof req.body.subject === 'string' && req.body.subject.trim() ? req.body.subject.trim() : `Upcoming election: ${election.title}`;
+    const message = typeof req.body.message === 'string' && req.body.message.trim()
+      ? req.body.message.trim()
+      : `Hello,\n\n${election.university.name} has an upcoming election: ${election.title}.\nVoting is scheduled from ${election.startAt.toISOString()} until ${election.endAt.toISOString()}. Please sign in to the voting portal during the election period.\n\nUniversity Election Office`;
+    const channel = ['email', 'sms', 'both'].includes(req.body.channel) ? req.body.channel : 'both';
+    const voters = await prisma.voter.findMany({ where: { universityId, approved: true }, select: { id: true, email: true, phone: true } });
+    let sent = 0;
+    let failed = 0;
+    for (const voter of voters) {
+      const contacts = [
+        ...(channel === 'email' || channel === 'both' ? [voter.email] : []),
+        ...(channel === 'sms' || channel === 'both' ? [voter.phone] : [])
+      ].filter((contact): contact is string => Boolean(contact));
+      for (const to of contacts) {
+        try { await sendNotificationToContact({ to, subject, text: message }); sent += 1; }
+        catch (error) { failed += 1; console.error(`Notification failed for voter ${voter.id}:`, error); }
       }
     }
-
-    await prisma.auditLog.create({ data: { userId: adminUserId, action: 'notify_approved_voters', resourceType: 'election', resourceId: electionId, details: { count: results.length } as any } });
-
-    return res.json({ success: true, results });
-  } catch (err) {
-    console.error(err);
-    return res.status(500).json({ error: 'Internal server error' });
+    await prisma.auditLog.create({ data: { userId: auth?.userId || null, action: 'notify_approved_voters', resourceType: 'election', resourceId: electionId, details: { sent, failed, channel } } });
+    return res.json({ success: true, sent, failed, voters: voters.length });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: 'Could not send election notifications.' });
   }
 };

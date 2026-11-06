@@ -1,5 +1,5 @@
 import express from 'express';
-import { requireAuth, requireAnyRole, requireUniversityAccess } from '../utils/jwtMiddleware';
+import { requireAuth, requireAnyRole, requireRole, requireUniversityAccess } from '../utils/jwtMiddleware';
 import { createStaffHandler, registerVoterHandler } from '../controllers/staffController';
 
 const router = express.Router();

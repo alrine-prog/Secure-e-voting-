@@ -1,155 +1,60 @@
-import { useState, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { useRouter } from 'next/router';
 import Link from 'next/link';
+import Nav from '../../components/Nav';
+import { apiFetch } from '../../lib/api';
 
-interface CandidateResult {
-  id: string;
-  name: string;
-  party: string;
-  votes: number;
-  color: string;
-}
+type Election = { id: string; title: string; status: string };
+type CandidateTally = { id: string; name: string; description: string | null; votes: number; percentage: number };
+type PositionTally = { position: string; totalVotes: number; candidates: CandidateTally[] };
+type Tally = {
+  election: { id: string; title: string; description: string | null; startAt: string; endAt: string; status: string };
+  summary: { approvedVoters: number; votersVoted: number; votersRemaining: number; totalBallotsCast: number; turnoutPercentage: number };
+  positions: PositionTally[];
+  refreshedAt: string;
+};
 
 export default function LiveTallyPage() {
-  const [lastUpdated, setLastUpdated] = useState<string>('');
-  const [isLive, setIsLive] = useState<boolean>(true);
+  const router = useRouter();
+  const electionId = typeof router.query.electionId === 'string' ? router.query.electionId : '';
+  const [elections, setElections] = useState<Election[]>([]);
+  const [tally, setTally] = useState<Tally | null>(null);
+  const [isLive, setIsLive] = useState(true);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  // Mock initial tally data
-  const [results, setResults] = useState<CandidateResult[]>([
-    { id: '1', name: 'Dr. Sarah Jenkins', party: 'Alliance Party', votes: 14230, color: 'bg-blue-600' },
-    { id: '2', name: 'Marcus Vance', party: 'Progressive Choice', votes: 11890, color: 'bg-purple-600' },
-    { id: '3', name: 'Elena Rostova', party: 'Independent Coalition', votes: 4520, color: 'bg-emerald-600' },
-  ]);
+  const refresh = useCallback(async () => {
+    try {
+      const listResult = await apiFetch('/observer/elections');
+      if (!listResult.ok) { setError(listResult.body?.error || 'Observer access is required.'); return; }
+      const list: Election[] = listResult.body?.elections || [];
+      setElections(list);
+      const selectedId = electionId || list.find((item) => item.status === 'open')?.id || list[0]?.id;
+      if (!selectedId) { setTally(null); setError('No elections are available for monitoring.'); return; }
+      if (!electionId && router.isReady) void router.replace({ pathname: '/observer/live-tally', query: { electionId: selectedId } }, undefined, { shallow: true });
+      const result = await apiFetch(`/observer/elections/${selectedId}/tally`);
+      if (!result.ok) { setError(result.body?.error || 'Could not load election tally.'); return; }
+      setTally(result.body as Tally);
+      setError('');
+    } catch { setError('Could not connect to the tally service.'); }
+    finally { setLoading(false); }
+  }, [electionId, router]);
 
-  const totalVotes = results.reduce((acc, curr) => acc + curr.votes, 0);
-
-  // Function to simulate real-time updates
-  const refreshTally = () => {
-    setResults((prev) =>
-      prev.map((candidate) => ({
-        ...candidate,
-        votes: candidate.votes + Math.floor(Math.random() * 15),
-      }))
-    );
-    setLastUpdated(new Date().toLocaleTimeString());
-  };
-
+  useEffect(() => { if (router.isReady) void refresh(); }, [router.isReady, electionId, refresh]);
   useEffect(() => {
-    setLastUpdated(new Date().toLocaleTimeString());
     if (!isLive) return;
+    const interval = window.setInterval(() => { void refresh(); }, 5000);
+    return () => window.clearInterval(interval);
+  }, [isLive, refresh]);
 
-    // Simulate real-time websocket/polling updates every 5 seconds
-    const interval = setInterval(() => {
-      refreshTally();
-    }, 5000);
-
-    return () => clearInterval(interval);
-  }, [isLive]);
-
-  return (
-    <div className="min-h-screen bg-slate-900 text-slate-100 p-6 md:p-10">
-      <div className="max-w-6xl mx-auto space-y-8">
-        
-        {/* Header Section */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-800 pb-6">
-          <div>
-            <div className="flex items-center gap-3">
-              <h1 className="text-3xl font-bold tracking-tight text-white">Live Election Tally</h1>
-              {isLive ? (
-                <span className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                  <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-                  LIVE UPDATING
-                </span>
-              ) : (
-                <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-800 text-slate-400">
-                  PAUSED
-                </span>
-              )}
-            </div>
-            <p className="text-slate-400 text-sm mt-1">
-              Observer Dashboard • Last sync: <span className="text-slate-200">{lastUpdated}</span>
-            </p>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => setIsLive(!isLive)}
-              className="px-4 py-2 text-sm font-medium rounded-md border border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-200 transition"
-            >
-              {isLive ? 'Pause Stream' : 'Resume Stream'}
-            </button>
-            <button
-              onClick={refreshTally}
-              className="px-4 py-2 text-sm font-medium rounded-md bg-orange-500 hover:bg-orange-600 text-white shadow transition"
-            >
-              Force Refresh
-            </button>
-          </div>
-        </div>
-
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="p-5 bg-slate-800/60 border border-slate-800 rounded-lg">
-            <span className="text-xs uppercase font-bold text-slate-400 tracking-wider">Total Ballots Cast</span>
-            <div className="text-3xl font-bold mt-2 text-white">{totalVotes.toLocaleString()}</div>
-          </div>
-          <div className="p-5 bg-slate-800/60 border border-slate-800 rounded-lg">
-            <span className="text-xs uppercase font-bold text-slate-400 tracking-wider">Precincts Reporting</span>
-            <div className="text-3xl font-bold mt-2 text-white">42 / 45 <span className="text-sm font-normal text-slate-400">(93.3%)</span></div>
-          </div>
-          <div className="p-5 bg-slate-800/60 border border-slate-800 rounded-lg">
-            <span className="text-xs uppercase font-bold text-slate-400 tracking-wider">Voter Turnout</span>
-            <div className="text-3xl font-bold mt-2 text-white">68.4%</div>
-          </div>
-          <div className="p-5 bg-slate-800/60 border border-slate-800 rounded-lg">
-            <span className="text-xs uppercase font-bold text-slate-400 tracking-wider">Audit Integrity Status</span>
-            <div className="text-3xl font-bold mt-2 text-emerald-400 flex items-center gap-2 text-2xl">
-              ✓ Verified
-            </div>
-          </div>
-        </div>
-
-        {/* Candidate Results breakdown */}
-        <div className="bg-slate-800/40 border border-slate-800 rounded-lg p-6 space-y-6">
-          <h2 className="text-xl font-bold text-white">Executive Board Election Results</h2>
-
-          <div className="space-y-6">
-            {results.map((candidate) => {
-              const percentage = totalVotes > 0 ? ((candidate.votes / totalVotes) * 100).toFixed(1) : '0';
-
-              return (
-                <div key={candidate.id} className="space-y-2">
-                  <div className="flex justify-between items-end">
-                    <div>
-                      <span className="font-semibold text-white text-lg">{candidate.name}</span>
-                      <span className="ml-3 text-xs text-slate-400 font-medium">{candidate.party}</span>
-                    </div>
-                    <div className="text-right">
-                      <span className="text-lg font-bold text-white">{candidate.votes.toLocaleString()}</span>
-                      <span className="ml-2 text-sm text-slate-400">({percentage}%)</span>
-                    </div>
-                  </div>
-
-                  {/* Progress Bar Container */}
-                  <div className="w-full bg-slate-900 rounded-full h-4 overflow-hidden p-0.5 border border-slate-700/50">
-                    <div
-                      className={`h-full rounded-full transition-all duration-500 ease-out ${candidate.color}`}
-                      style={{ width: `${percentage}%` }}
-                    />
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Footer Navigation Back to Portal */}
-        <div className="flex justify-between items-center pt-4">
-          <Link href="/" legacyBehavior>
-            <a className="text-sm text-slate-400 hover:text-white transition">← Back to Dashboard</a>
-          </Link>
-        </div>
-
-      </div>
-    </div>
-  );
+  return <div className="dashboard-page"><Nav userRole="observer" /><main className="dashboard-main">
+    <header className="dashboard-heading"><div><span className="dashboard-kicker">Independent election oversight</span><h1>Live election tally</h1><p>Results are grouped by election post and refresh from recorded ballots.</p></div><span className="dashboard-role">{isLive ? 'LIVE' : 'PAUSED'}</span></header>
+    <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap', marginBottom: 16 }}><label htmlFor="election-select">Election</label><select id="election-select" value={tally?.election.id || electionId} onChange={(event) => { void router.push({ pathname: '/observer/live-tally', query: { electionId: event.target.value } }); }}><option value="" disabled>Select election</option>{elections.map((item) => <option key={item.id} value={item.id}>{item.title} ({item.status})</option>)}</select><button className="dashboard-button" type="button" onClick={() => void refresh()}>Refresh now</button><button className="dashboard-button" type="button" onClick={() => setIsLive((value) => !value)}>{isLive ? 'Pause updates' : 'Resume updates'}</button><Link href="/observer/dashboard">← Observer dashboard</Link></div>
+    {error && <p className="form-message" role="alert">{error}</p>}
+    {loading && !tally ? <p className="dashboard-state">Loading live tally…</p> : tally && <>
+      <section className="dashboard-card"><div className="dashboard-card-heading"><div><span className="dashboard-kicker">{tally.election.status}</span><h2>{tally.election.title}</h2><p>{new Date(tally.election.startAt).toLocaleString()} – {new Date(tally.election.endAt).toLocaleString()}</p></div><small>Last updated {new Date(tally.refreshedAt).toLocaleTimeString()}</small></div></section>
+      <section className="dashboard-stat-grid" style={{ marginTop: 16 }}><article className="dashboard-stat"><span>Approved voters</span><strong>{tally.summary.approvedVoters.toLocaleString()}</strong><small>Eligible university voters</small></article><article className="dashboard-stat"><span>Voters who have voted</span><strong>{tally.summary.votersVoted.toLocaleString()}</strong><small>{tally.summary.turnoutPercentage}% turnout</small></article><article className="dashboard-stat"><span>Voters yet to vote</span><strong>{tally.summary.votersRemaining.toLocaleString()}</strong><small>Approved voters with no recorded ballot</small></article><article className="dashboard-stat"><span>Total ballots cast</span><strong>{tally.summary.totalBallotsCast.toLocaleString()}</strong><small>Votes counted across all posts</small></article></section>
+      {!tally.positions.length ? <section className="dashboard-card" style={{ marginTop: 20 }}><h2>No candidates registered</h2><p>Candidate results will appear here after candidates are added and votes are cast.</p></section> : tally.positions.map((position) => <section className="dashboard-card" key={position.position} style={{ marginTop: 20 }}><div className="dashboard-card-heading"><div><span className="dashboard-kicker">Post</span><h2>{position.position}</h2></div><strong>{position.totalVotes.toLocaleString()} votes</strong></div>{position.candidates.map((candidate) => <article key={candidate.id} style={{ marginTop: 18 }}><div className="dashboard-card-heading"><div><strong>{candidate.name}</strong>{candidate.description && <p>{candidate.description}</p>}</div><strong>{candidate.votes.toLocaleString()} · {candidate.percentage}%</strong></div><div role="progressbar" aria-label={`${candidate.name} vote share for ${position.position}`} aria-valuenow={candidate.percentage} aria-valuemin={0} aria-valuemax={100} style={{ height: 10, background: '#e5e7eb', borderRadius: 999, overflow: 'hidden', marginTop: 8 }}><div style={{ width: `${candidate.percentage}%`, height: '100%', background: '#2563eb', transition: 'width 300ms ease' }} /></div></article>)}</section>)}
+    </>}
+  </main><footer className="dashboard-footer">Secure E-Voting · Independent oversight</footer></div>;
 }

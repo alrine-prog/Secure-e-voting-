@@ -1,4 +1,5 @@
 import '../styles/globals.css';
+import '../styles/nav.css';
 import '../styles/landing.css';
 import '../styles/logo-section.css';
 import '../styles/public-pages.css';

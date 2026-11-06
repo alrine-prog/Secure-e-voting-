@@ -8,22 +8,36 @@ interface NavProps {
 export default function Nav({ userRole }: NavProps) {
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    const handleClick = (event: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) setOpen(false);
-    };
-    document.addEventListener('click', handleClick);
-    return () => document.removeEventListener('click', handleClick);
-  }, []);
-
   const isUniversityAdmin = userRole === 'uni_admin' || userRole === 'university_admin';
 
+  useEffect(() => {
+    const handlePointerDown = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) setOpen(false);
+    };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setOpen(false);
+    };
+    document.addEventListener('mousedown', handlePointerDown);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', handlePointerDown);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
+
+  const closeMenu = () => setOpen(false);
+
   return (
-    <nav className="top-nav flex items-center justify-between w-full relative px-6 py-4 bg-slate-900 text-white" aria-label="Main navigation">
-      <div className="nav-links flex items-center gap-6">
-        <Link href="/" className="nav-brand" aria-label="Secure E-Voting home"><span className="nav-brand-mark" aria-hidden="true">✓</span><span>Secure<span className="nav-brand-accent">Vote</span></span></Link>
-        <Link href="/">Home</Link><Link href="/about">About us</Link><Link href="/policies">Policies</Link><Link href="/contact">Support</Link>
+    <nav className="top-nav" aria-label="Main navigation">
+      <div className="nav-links">
+        <Link href="/" className="nav-brand" aria-label="Secure E-Voting home" onClick={closeMenu}>
+          <span className="nav-brand-mark" aria-hidden="true">✓</span>
+          <span>Secure<span className="nav-brand-accent"> E-Voting</span></span>
+        </Link>
+        <Link href="/" onClick={closeMenu}>Home</Link>
+        <Link href="/about" onClick={closeMenu}>About</Link>
+        <Link href="/policies" onClick={closeMenu}>Policies</Link>
+        <Link href="/contact" onClick={closeMenu}>Support</Link>
       </div>
       <div className="menu-wrap relative flex items-center gap-4 ml-auto" ref={menuRef}>
         {userRole === 'system_owner' && <Link href="/admin/university/pending" className="text-yellow-400 font-medium">University approvals</Link>}

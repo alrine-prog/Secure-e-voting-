@@ -7,14 +7,11 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// ==========================================
-// ENUMS
-// ==========================================
-
 enum UserRole {
   system_owner
   university_admin
   staff
+  observer
   voter
 }
 
@@ -30,10 +27,6 @@ enum ElectionStatus {
   closed
   archived
 }
-
-// ==========================================
-// MODELS
-// ==========================================
 
 model University {
   id           String           @id @default(uuid())
@@ -52,20 +45,21 @@ model University {
 }
 
 model User {
-  id            String      @id @default(uuid())
-  university    University? @relation("UniversityUsers", fields: [universityId], references: [id], onDelete: SetNull)
-  universityId  String?
-  role          UserRole    @default(voter)
-  username      String      @unique
-  firstName     String
-  secondName    String
-  email         String      @unique
-  phone         String?
-  passwordHash  String
-  isActive      Boolean     @default(true)
-  emailVerified Boolean     @default(false)
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
+  id                 String      @id @default(uuid())
+  university         University? @relation("UniversityUsers", fields: [universityId], references: [id], onDelete: SetNull)
+  universityId       String?
+  role               UserRole    @default(voter)
+  username           String      @unique
+  firstName          String
+  secondName         String
+  email              String      @unique
+  phone              String?
+  passwordHash       String
+  mustChangePassword Boolean     @default(false)
+  isActive           Boolean     @default(true)
+  emailVerified      Boolean     @default(false)
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
 
   registeredVoters Voter[]    @relation("RegisteredBy")
   createdElections Election[] @relation("CreatedBy")
@@ -114,6 +108,7 @@ model Election {
   candidates Candidate[]
   voteTokens VoteToken[]
   votes      Vote[]
+  candidates Candidate[]
 
   @@index([universityId, status])
 }
@@ -144,23 +139,31 @@ model VoteToken {
   voterId    String
   election   Election @relation(fields: [electionId], references: [id], onDelete: Cascade)
   electionId String
+  position   String   @default("General")
   tokenHash  String   @unique
   used       Boolean  @default(false)
   issuedAt   DateTime @default(now())
   usedAt     DateTime?
 
+  @@unique([electionId, voterId, position], map: "uniq_vote_token_position")
   @@index([voterId, electionId])
+  @@index([electionId, position])
 }
 
 model Vote {
-  id         String   @id @default(uuid())
-  election   Election @relation(fields: [electionId], references: [id], onDelete: Cascade)
-  electionId String
-  candidate  String
-  tokenHash  String
-  createdAt  DateTime @default(now())
+  id          String     @id @default(uuid())
+  election    Election   @relation(fields: [electionId], references: [id], onDelete: Cascade)
+  electionId  String
+  candidate   String
+  candidateId String?
+  candidateRef Candidate? @relation(fields: [candidateId], references: [id], onDelete: SetNull)
+  position    String     @default("General")
+  tokenHash   String
+  createdAt   DateTime   @default(now())
 
   @@index([electionId])
+  @@index([electionId, position])
+  @@index([candidateId])
 }
 
 model PasswordResetOtp {
