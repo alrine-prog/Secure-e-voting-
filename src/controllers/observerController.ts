@@ -41,10 +41,9 @@ export const getObserverElectionTallyHandler = async (req: Request, res: Respons
     const [approvedVoters, candidates, votes] = await Promise.all([
       prisma.voter.count({ where: { universityId: auth.universityId, approved: true } }),
       prisma.candidate.findMany({ where: { electionId }, orderBy: [{ position: 'asc' }, { name: 'asc' }] }),
-      prisma.vote.findMany({ where: { electionId }, select: { candidateId: true, candidate: true, tokenHash: true } })
+      prisma.vote.findMany({ where: { electionId }, select: { candidateId: true, candidate: true, position: true, tokenHash: true } })
     ]);
 
-    // Count unique approved voters with at least one ballot, rather than total votes across posts.
     const votedVoterIds = votes.length
       ? await prisma.voteToken.findMany({
           where: { electionId, used: true, voter: { approved: true, universityId: auth.universityId } },

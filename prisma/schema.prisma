@@ -131,12 +131,15 @@ model VoteToken {
   voterId    String
   election   Election @relation(fields: [electionId], references: [id], onDelete: Cascade)
   electionId String
+  position   String
   tokenHash  String   @unique
   used       Boolean  @default(false)
   issuedAt   DateTime @default(now())
   usedAt     DateTime?
 
+  @@unique([electionId, voterId, position], map: "uniq_vote_token_position")
   @@index([voterId, electionId])
+  @@index([electionId, position])
 }
 
 model Vote {
@@ -146,10 +149,12 @@ model Vote {
   candidate   String
   candidateId String?
   candidateRef Candidate? @relation(fields: [candidateId], references: [id], onDelete: SetNull)
+  position    String
   tokenHash   String
   createdAt   DateTime   @default(now())
 
   @@index([electionId])
+  @@index([electionId, position])
   @@index([candidateId])
 }
 
