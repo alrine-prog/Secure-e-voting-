@@ -20,7 +20,7 @@ export default function HomePage() {
   return (
     <div className="landing-page premium-home">
       <Head>
-        <title>Secure Electronic Voting system (SEVS)| Trusted and Transparent campus elections</title>
+        <title>Secure Electronic Voting system (SEVS)</title>
         <meta name="description" content="A secure, transparent election platform for universities and institutions." />
       </Head>
 
@@ -56,7 +56,7 @@ export default function HomePage() {
         <section className="landing-benefits" aria-label="Platform principles">
           <article><span className="benefit-icon purple" aria-hidden="true">⌑</span><div><h2>Privacy-conscious</h2><p>Support ballot privacy through a clear voter workflow.</p></div></article>
           <article><span className="benefit-icon green" aria-hidden="true">✓</span><div><h2>Built for oversight</h2><p>Keep administrative activity available for review.</p></div></article>
-          <article><span className="benefit-icon green" aria-hidden="true"☆</span> <div> <h2> No ballotspaper, No tally</h2><p> Manage in platform. </p></div> </article> 
+          <article><span className="benefit-icon green" aria-hidden="true">★</span><div><h2>No ballotspaper, No tally</h2><p>Manage in platform.</p></div></article>
           <article><span className="benefit-icon blue" aria-hidden="true">↗</span><div><h2>One connected process</h2><p>Coordinate election tasks in one platform.</p></div></article>
         </section>
 
