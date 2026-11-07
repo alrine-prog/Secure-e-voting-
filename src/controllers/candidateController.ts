@@ -35,16 +35,22 @@ type CandidateInput = {
   description: string;
 };
 
-const getAuthorizedElection = async (electionId: string, auth: any) => {
+type AuthErrorResult = { error: string; status: number };
+type AuthSuccessResult = { election: any };
+type AuthResult = AuthErrorResult | AuthSuccessResult;
+
+const getAuthorizedElection = async (electionId: string, auth: any): Promise<AuthResult> => {
   if (!auth || !isUniversityAdmin(auth.role)) {
-    return { error: 'University administrator access required.', status: 403 } as const;
+    return { error: 'University administrator access required.', status: 403 };
   }
   const election = await prisma.election.findUnique({ where: { id: electionId } });
-  if (!election) return { error: 'Election not found', status: 404 } as const;
-  if (auth.universityId !== election.universityId) {
-    return { error: 'University access denied', status: 403 } as const;
+  if (!election) {
+    return { error: 'Election not found', status: 404 };
   }
-  return { election } as const;
+  if (auth.universityId !== election.universityId) {
+    return { error: 'University access denied', status: 403 };
+  }
+  return { election };
 };
 
 const candidateFields = (body: Record<string, unknown> = {}): CandidateInput => ({
@@ -109,7 +115,9 @@ export const listCandidatesHandler = async (req: Request, res: Response) => {
   const electionId = getParam(req.params.electionId);
   try {
     const access = await getAuthorizedElection(electionId, auth);
-    if ('error' in access) return res.status(access.status).json({ error: access.error });
+    if ('error' in access) {
+      return res.status(access.status).json({ error: access.error });
+    }
 
     const candidates = await prisma.candidate.findMany({
       where: { electionId: access.election.id },
