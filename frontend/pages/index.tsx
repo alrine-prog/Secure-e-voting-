@@ -64,7 +64,7 @@ export default function HomePage() {
           <div className="feature-grid">
             <article className="feature-card"><img src="https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&w=900&q=80" alt="Graduates celebrating together" /><div><span className="feature-number">01 / ORGANIZE</span><h3>Prepare the election</h3><p>Set election details, manage eligible voters, and coordinate your team.</p></div></article>
             <article className="feature-card"><img src="https://images.unsplash.com/photo-1517486808906-6ca8b3f04846?auto=format&fit=crop&w=900&q=80" alt="Students collaborating at a university" /><div><span className="feature-number">02 / PARTICIPATE</span><h3>Enable participation</h3><p>Offer eligible voters a clear and accessible process to cast a ballot.</p></div></article>
-            <article className="feature-card"><img src="https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=900&q=80" alt="Instructor and students in a classroom" /><div><span className="feature-number">03 / REVIEW</span><h3>Review the outcome</h3><p>Follow election progress and present results with useful oversight tools.</p></div></article>
+            <article className="feature-card"><img src="https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=500&q=80" alt="Instructor and students in a classroom" /><div><span className="feature-number">03 / REVIEW</span><h3>Review the outcome</h3><p>Follow election progress and present results with useful oversight tools.</p></div></article>
           </div>
         </section>
 
