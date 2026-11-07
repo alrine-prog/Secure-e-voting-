@@ -11,6 +11,21 @@ const cleanText = (value: unknown): string => {
   return '';
 };
 
+// Helper to safely extract a param string from req.params
+const getParam = (param: string | string[] | undefined): string => {
+  if (typeof param === 'string') return param;
+  if (Array.isArray(param) && param.length > 0) return param[0];
+  return '';
+};
+
+const cleanupUploadedFile = (file?: Express.Multer.File) => {
+  if (file?.path && fs.existsSync(file.path)) {
+    fs.unlink(file.path, (err) => {
+      if (err) console.error('Failed to cleanup orphan file:', err);
+    });
+  }
+};
+
 type CandidateInput = {
   fullName: string;
   position: string;
@@ -22,10 +37,14 @@ type CandidateInput = {
 };
 
 const getAuthorizedElection = async (electionId: string, auth: any) => {
-  if (!auth || !isUniversityAdmin(auth.role)) return { error: 'University administrator access required.', status: 403 } as const;
+  if (!auth || !isUniversityAdmin(auth.role)) {
+    return { error: 'University administrator access required.', status: 403 } as const;
+  }
   const election = await prisma.election.findUnique({ where: { id: electionId } });
   if (!election) return { error: 'Election not found', status: 404 } as const;
-  if (auth.universityId !== election.universityId) return { error: 'University access denied', status: 403 } as const;
+  if (auth.universityId !== election.universityId) {
+    return { error: 'University access denied', status: 403 } as const;
+  }
   return { election } as const;
 };
 
@@ -43,31 +62,45 @@ const missingRequiredFields = (fields: CandidateInput) =>
   (['fullName', 'position', 'faculty', 'college', 'party', 'symbol'] as const).filter((key) => !fields[key]);
 
 export const createCandidateHandler = async (req: Request, res: Response) => {
-  const electionId = req.params.electionId;
+  const electionId = getParam(req.params.electionId);
   const auth = (req as any).auth;
   const fields = candidateFields(req.body as Record<string, unknown>);
   const missing = missingRequiredFields(fields);
-  if (missing.length) return res.status(400).json({ error: `Required candidate fields: ${missing.join(', ')}` });
+
+  if (missing.length) {
+    cleanupUploadedFile(req.file);
+    return res.status(400).json({ error: `Required candidate fields: ${missing.join(', ')}` });
+  }
 
   try {
     const access = await getAuthorizedElection(electionId, auth);
-    if ('error' in access) return res.status(access.status).json({ error: access.error });
+    if ('error' in access) {
+      cleanupUploadedFile(req.file);
+      return res.status(access.status).json({ error: access.error });
+    }
 
     const photoUrl = req.file ? `/elections/candidate-photos/${req.file.filename}` : null;
+    const { fullName, ...restFields } = fields;
+
     const candidate = await prisma.candidate.create({
       data: {
-        ...fields,
-        fullname: fields.fullName,
+        ...restFields,
+        name: fullName,
         description: fields.description || null,
         photoUrl,
-        election: { connect: { id: electionId } },
+        election: {
+          connect: { id: electionId },
+        },
       },
     });
+
     await prisma.auditLog.create({
       data: { userId: auth.userId, action: 'add_candidate', resourceType: 'candidate', resourceId: candidate.id },
     });
+
     return res.status(201).json({ success: true, candidate });
   } catch (error) {
+    cleanupUploadedFile(req.file);
     console.error(error);
     return res.status(500).json({ error: 'Could not save candidate. Please try again.' });
   }
@@ -75,10 +108,15 @@ export const createCandidateHandler = async (req: Request, res: Response) => {
 
 export const listCandidatesHandler = async (req: Request, res: Response) => {
   const auth = (req as any).auth;
+  const electionId = getParam(req.params.electionId);
   try {
-    const access = await getAuthorizedElection(req.params.electionId, auth);
+    const access = await getAuthorizedElection(electionId, auth);
     if ('error' in access) return res.status(access.status).json({ error: access.error });
-    const candidates = await prisma.candidate.findMany({ where: { electionId: access.election.id }, orderBy: { createdAt: 'asc' } });
+
+    const candidates = await prisma.candidate.findMany({
+      where: { electionId: access.election.id },
+      orderBy: { createdAt: 'asc' },
+    });
     return res.json({ success: true, candidates });
   } catch (error) {
     console.error(error);
@@ -87,43 +125,63 @@ export const listCandidatesHandler = async (req: Request, res: Response) => {
 };
 
 export const updateCandidateHandler = async (req: Request, res: Response) => {
-  const { electionId, candidateId } = req.params;
+  const electionId = getParam(req.params.electionId);
+  const candidateId = getParam(req.params.candidateId);
   const auth = (req as any).auth;
   const fields = candidateFields(req.body as Record<string, unknown>);
   const missing = missingRequiredFields(fields);
-  if (missing.length) return res.status(400).json({ error: `Required candidate fields: ${missing.join(', ')}` });
+
+  if (missing.length) {
+    cleanupUploadedFile(req.file);
+    return res.status(400).json({ error: `Required candidate fields: ${missing.join(', ')}` });
+  }
 
   try {
     const access = await getAuthorizedElection(electionId, auth);
-    if ('error' in access) return res.status(access.status).json({ error: access.error });
+    if ('error' in access) {
+      cleanupUploadedFile(req.file);
+      return res.status(access.status).json({ error: access.error });
+    }
+
     const existing = await prisma.candidate.findFirst({ where: { id: candidateId, electionId } });
-    if (!existing) return res.status(404).json({ error: 'Candidate not found' });
+    if (!existing) {
+      cleanupUploadedFile(req.file);
+      return res.status(404).json({ error: 'Candidate not found' });
+    }
+
+    const { fullName, ...restFields } = fields;
 
     const candidate = await prisma.candidate.update({
       where: { id: candidateId },
       data: {
-        ...fields,
-        fullname: fields.fullName,
+        ...restFields,
+        name: fullName,
         description: fields.description || null,
         ...(req.file ? { photoUrl: `/elections/candidate-photos/${req.file.filename}` } : {}),
       },
     });
+
     await prisma.auditLog.create({
       data: { userId: auth.userId, action: 'update_candidate', resourceType: 'candidate', resourceId: candidate.id },
     });
+
     return res.json({ success: true, candidate });
   } catch (error) {
+    cleanupUploadedFile(req.file);
     console.error(error);
     return res.status(500).json({ error: 'Could not update candidate. Please try again.' });
   }
 };
 
 export const getCandidatePhotoHandler = (req: Request, res: Response) => {
-  const rawFilename: unknown = req.params.filename;
-  const filename = typeof rawFilename === 'string' ? rawFilename : '';
-  // Upload names are generated by the server; reject any path-like or unexpected filename.
-  if (!/^[0-9a-f-]{36}\.(jpg|png|webp)$/.test(filename)) return res.status(404).end();
+  const filename = getParam(req.params.filename);
+
+  if (!/^[0-9a-f-]{36}\.(jpg|png|webp)$/i.test(filename)) {
+    return res.status(404).end();
+  }
+
   const photoPath = path.resolve(process.cwd(), 'uploads', 'candidates', filename);
   if (!fs.existsSync(photoPath)) return res.status(404).end();
+
   return res.sendFile(photoPath);
 };
