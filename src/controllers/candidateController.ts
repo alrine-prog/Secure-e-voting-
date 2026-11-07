@@ -11,7 +11,6 @@ const cleanText = (value: unknown): string => {
   return '';
 };
 
-// Helper to safely extract a param string from req.params
 const getParam = (param: string | string[] | undefined): string => {
   if (typeof param === 'string') return param;
   if (Array.isArray(param) && param.length > 0) return param[0];
@@ -88,9 +87,7 @@ export const createCandidateHandler = async (req: Request, res: Response) => {
         name: fullName,
         description: fields.description || null,
         photoUrl,
-        election: {
-          connect: { id: electionId },
-        },
+        electionId, // Use direct scalar foreign key ID here
       },
     });
 
