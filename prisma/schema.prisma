@@ -103,12 +103,7 @@ model Election {
   createdById  String?
   createdBy    User?          @relation("CreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
   createdAt    DateTime       @default(now())
-  updatedAt    DateTime       @updatedAt
-
-  candidates Candidate[]
-  voteTokens VoteToken[]
-  votes      Vote[]
-  candidates Candidate[]
+  updatedAt    DateTime       
 
   @@index([universityId, status])
 }
