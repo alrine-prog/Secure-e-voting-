@@ -9,7 +9,7 @@
     "build:frontend": "npm install --prefix frontend && npm run build --prefix frontend",
     "build:backend": "prisma generate && tsc",
     "build": "npm run build:frontend && npm run build:backend",
-    "postbuild": "npx prisma db push --accept-data-loss",
+    "postbuild": "npx prisma db push",
     "start": "node dist/server.js",
     "prisma": "prisma",
     "seed": "tsx src/seed.ts"
