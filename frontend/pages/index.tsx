@@ -41,7 +41,7 @@ export default function HomePage() {
             <div className="hero-trust"><span aria-hidden="true">✓</span> A unified election experience for your campus community</div>
           </div>
           <div className="hero-image-wrap">
-            <img className="hero-image" src="https://images.unsplash.com/photo-1523580494863-6f3031224c94?auto=format&fit=crop&w=200&q=85" alt="University students gathered on campus" />
+            <img className="hero-image" src="https://images.unsplash.com/photo-1523580494863-6f3031224c94?auto=format&fit=crop&w=900&q=80" alt="University students gathered on campus" />
             <div className="hero-image-caption"><span className="caption-icon" aria-hidden="true">✓</span><span><strong>Every voice has a place.</strong><small>Purpose-built for institutional elections</small></span></div>
           </div>
         </section>
@@ -69,7 +69,7 @@ export default function HomePage() {
         </section>
 
         <section className="landing-workflow">
-          <div className="workflow-image"><img src="https://images.unsplash.com/photo-1521737711867-e3b97375f902?auto=format&fit=crop&w=100&q=85" alt="A team working together around a table" /><div className="workflow-note"><span>✓</span><div><strong>One coordinated workflow</strong><small>For administrators, staff, and voters</small></div></div></div>
+          <div className="workflow-image"><img src="https://images.unsplash.com/photo-1521737711867-e3b97375f902?auto=format&fit=crop&w=900&q=80" alt="A team working together around a table" /><div className="workflow-note"><span>✓</span><div><strong>One coordinated workflow</strong><small>For administrators, staff, and voters</small></div></div></div>
           <div className="workflow-copy"><span className="landing-eyebrow">How it works</span><h2>A clear process makes elections easier to manage.</h2><p>Bring the essential stages of an institutional election together in a practical, role-based workflow.</p>
             <ol className="workflow-list">
               <li><span>1</span><div><strong>Register your institution</strong><p>Submit university details for onboarding and approval.</p></div></li>
@@ -104,7 +104,7 @@ export default function HomePage() {
         <section className="landing-final-cta"><div><span className="landing-eyebrow">For universities and institutions</span><h2>Bring clarity to your next institutional election.</h2></div><Link className="landing-button light" href="/register-university">Register your university <span aria-hidden="true">→</span></Link></section>
       </main>
 
-      <footer className="landing-footer"><Link href="/" className="footer-brand">Secure<span>Vote</span></Link><div className="footer-links"><Link href="/about">About us</Link><Link href="/policies">Policies</Link><Link href="/contact">Support</Link><a href="#faq">FAQs</a></div><a href="#demo" className="footer-demo-link">View the demo <span aria-hidden="true">→</span></a><p>Secure E-Voting is Powered by Alrine Technology. All rights reserved 2026.</p></footer>
+      <footer className="landing-footer"><Link href="/" className="footer-brand">Secure<span>Vote</span></Link><div className="footer-links"><Link href="/about"><span>About us</span></Link><Link href="/policies"> <span> Policies </span></Link><Link href="/contact"><span> Support </span></Link><a href="#faq"><span>FAQs</span></a></div><a href="#demo" className="footer-demo-link">View the demo <span aria-hidden="true">→</span></a><p>Secure E-Voting System is Powered by Alrine Technology. All rights reserved 2026.</p></footer>
     </div>
   );
 }
