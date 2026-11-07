@@ -1,6 +1,12 @@
 import { Request, Response } from 'express';
 import prisma from '../prismaClient';
 
+const getSingleString = (value: unknown): string => {
+  if (typeof value === 'string') return value;
+  if (Array.isArray(value) && value.length > 0 && typeof value[0] === 'string') return value[0];
+  return '';
+};
+
 const getObserverAuth = (req: Request, res: Response) => {
   const auth = (req as any).auth;
   if (!auth) {
@@ -16,7 +22,7 @@ const getObserverAuth = (req: Request, res: Response) => {
 
 type CandidateTally = {
   id: string;
-  name: string;
+  fullName: string;
   description: string | null;
   votes: number;
   percentage: number;
@@ -31,6 +37,7 @@ type PositionTally = {
 export const listObserverElectionsHandler = async (req: Request, res: Response) => {
   const auth = getObserverAuth(req, res);
   if (!auth) return;
+
   try {
     const elections = await prisma.election.findMany({
       where: { universityId: auth.universityId },
@@ -47,7 +54,8 @@ export const listObserverElectionsHandler = async (req: Request, res: Response) 
 export const getObserverElectionTallyHandler = async (req: Request, res: Response) => {
   const auth = getObserverAuth(req, res);
   if (!auth) return;
-  const electionId = typeof req.params.electionId === 'string' ? req.params.electionId : '';
+
+  const electionId = getSingleString(req.params.electionId);
   if (!electionId) return res.status(400).json({ error: 'Election ID is required.' });
 
   try {
@@ -59,8 +67,14 @@ export const getObserverElectionTallyHandler = async (req: Request, res: Respons
 
     const [approvedVoters, candidates, votes] = await Promise.all([
       prisma.voter.count({ where: { universityId: auth.universityId, approved: true } }),
-      prisma.candidate.findMany({ where: { electionId }, orderBy: [{ position: 'asc' }, { name: 'asc' }] }),
-      prisma.vote.findMany({ where: { electionId }, select: { candidateId: true, candidate: true, position: true, tokenHash: true } }),
+      prisma.candidate.findMany({
+        where: { electionId },
+        orderBy: [{ position: 'asc' }, { fullName: 'asc' }], // Fixed: Changed 'name' to 'fullName'
+      }),
+      prisma.vote.findMany({
+        where: { electionId },
+        select: { candidateId: true, candidate: true, position: true, tokenHash: true },
+      }),
     ]);
 
     const votedVoterIds = votes.length
@@ -70,27 +84,30 @@ export const getObserverElectionTallyHandler = async (req: Request, res: Respons
           distinct: ['voterId'],
         })
       : [];
+
     const votersVoted = Math.min(approvedVoters, votedVoterIds.length);
     const votesByPosition = new Map<string, PositionTally>();
 
     for (const candidate of candidates) {
-      const candidateName = candidate.name ?? candidate.fullName;
       const candidateVotes = votes.filter(
-        (vote) => vote.candidateId === candidate.id || (!vote.candidateId && vote.candidate === candidateName),
+        (vote) => vote.candidateId === candidate.id || (!vote.candidateId && vote.candidate === candidate.fullName),
       ).length;
+
       const positionData = votesByPosition.get(candidate.position) ?? {
         position: candidate.position,
         totalVotes: 0,
         candidates: [],
       };
+
       positionData.totalVotes += candidateVotes;
       positionData.candidates.push({
         id: candidate.id,
-        name: candidateName,
+        fullName: candidate.fullName, // Fixed: Changed candidate.name to candidate.fullName
         description: candidate.description,
         votes: candidateVotes,
         percentage: 0,
       });
+
       votesByPosition.set(candidate.position, positionData);
     }
 
