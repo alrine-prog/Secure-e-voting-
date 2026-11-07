@@ -11,9 +11,9 @@ const cleanText = (value: unknown): string => {
   return '';
 };
 
-const getParam = (param: string | string[] | undefined): string => {
+const getParam = (param: unknown): string => {
   if (typeof param === 'string') return param;
-  if (Array.isArray(param) && param.length > 0) return param[0];
+  if (Array.isArray(param) && param.length > 0 && typeof param[0] === 'string') return param[0];
   return '';
 };
 
@@ -78,16 +78,17 @@ export const createCandidateHandler = async (req: Request, res: Response) => {
       return res.status(access.status).json({ error: access.error });
     }
 
-    const photoUrl = req.file ? `/elections/candidate-photos/${req.file.filename}` : null;
-    const { fullName, ...restFields } = fields;
-
     const candidate = await prisma.candidate.create({
       data: {
-        ...restFields,
-        name: fullName,
-        description: fields.description || null,
-        photoUrl,
-        electionId, // Use direct scalar foreign key ID here
+        fullName: fields.fullName,
+        position: fields.position,
+        faculty: fields.faculty,
+        college: fields.college,
+        party: fields.party,
+        symbol: fields.symbol,
+        description: fields.description || undefined,
+        photoUrl: req.file ? `/elections/candidate-photos/${req.file.filename}` : undefined,
+        electionId,
       },
     });
 
@@ -146,14 +147,16 @@ export const updateCandidateHandler = async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'Candidate not found' });
     }
 
-    const { fullName, ...restFields } = fields;
-
     const candidate = await prisma.candidate.update({
       where: { id: candidateId },
       data: {
-        ...restFields,
-        name: fullName,
-        description: fields.description || null,
+        fullName: fields.fullName,
+        position: fields.position,
+        faculty: fields.faculty,
+        college: fields.college,
+        party: fields.party,
+        symbol: fields.symbol,
+        description: fields.description || undefined,
         ...(req.file ? { photoUrl: `/elections/candidate-photos/${req.file.filename}` } : {}),
       },
     });
@@ -173,7 +176,7 @@ export const updateCandidateHandler = async (req: Request, res: Response) => {
 export const getCandidatePhotoHandler = (req: Request, res: Response) => {
   const filename = getParam(req.params.filename);
 
-  if (!/^[0-9a-f-]{36}\.(jpg|png|webp)$/i.test(filename)) {
+  if (!filename || !/^[0-9a-f-]{36}\.(jpg|png|webp)$/i.test(filename)) {
     return res.status(404).end();
   }
 
