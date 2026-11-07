@@ -20,7 +20,7 @@ export default function HomePage() {
   return (
     <div className="landing-page premium-home">
       <Head>
-        <title>Secure E-Voting | Trusted campus elections</title>
+        <title>Secure Electronic Voting system (SEVS)| Trusted and Transparent campus elections</title>
         <meta name="description" content="A secure, transparent election platform for universities and institutions." />
       </Head>
 
@@ -32,7 +32,7 @@ export default function HomePage() {
         <section className="landing-hero">
           <div className="hero-content">
             <span className="landing-eyebrow"><span className="eyebrow-dot" /> Digital elections for institutions</span>
-            <h1>Trust in every vote.<br /><span>Confidence in every result.</span></h1>
+            <h1>Trusted for time and money saving.<br /><span>Confidence in every result.</span></h1>
             <p>Run university elections with a clear, auditable process—from institution onboarding and voter registration to results review.</p>
             <div className="landing-actions">
               <a className="landing-button primary" href="#demo">Explore the demo <span aria-hidden="true">→</span></a>
@@ -41,21 +41,22 @@ export default function HomePage() {
             <div className="hero-trust"><span aria-hidden="true">✓</span> A unified election experience for your campus community</div>
           </div>
           <div className="hero-image-wrap">
-            <img className="hero-image" src="https://images.unsplash.com/photo-1523580494863-6f3031224c94?auto=format&fit=crop&w=900&q=80" alt="University students gathered on campus" />
-            <div className="hero-image-caption"><span className="caption-icon" aria-hidden="true">✓</span><span><strong>Every voice has a place.</strong><small>Purpose-built for institutional elections</small></span></div>
+            <img className="hero-image" src="https://images.unsplash.com/photo-1523580494863-6f3031224c94?auto=format&fit=crop&w=800&q=80" alt="University students gathered on campus" />
+            <div className="hero-image-caption"><span className="caption-icon" aria-hidden="true">✓</span><span><strong>Everyone can vote no matter geographical location or time schedules.</strong><small>Purpose-built for easy elections management for institution wit multiple campuses</small></span></div>
           </div>
         </section>
 
         <section className="campus-logo-section" aria-labelledby="campus-logo-title">
-          <p id="campus-logo-title">Supporting the communities that shape campus life</p>
+          <p id="campus-logo-title">Supporting the University with affordable election process</p>
           <div className="campus-logo-list">
-            {communities.map((community) => <div className="campus-logo" key={community.label}><span className="campus-logo-mark" aria-hidden="true">{community.monogram}</span><span>{community.label}</span></div>)}
+            {communities.map((University) => <div className="campus-logo" key={University.label}><span className="campus-logo-mark" aria-hidden="true">{University.monogram}</span><span>{University.label}</span></div>)}
           </div>
         </section>
 
         <section className="landing-benefits" aria-label="Platform principles">
           <article><span className="benefit-icon purple" aria-hidden="true">⌑</span><div><h2>Privacy-conscious</h2><p>Support ballot privacy through a clear voter workflow.</p></div></article>
           <article><span className="benefit-icon green" aria-hidden="true">✓</span><div><h2>Built for oversight</h2><p>Keep administrative activity available for review.</p></div></article>
+          <article><span className="benefit-icon green" aria-hidden="true"☆</span> <div> <h2> No ballotspaper, No tally</h2><p> Manage in platform. </p></div> </article> 
           <article><span className="benefit-icon blue" aria-hidden="true">↗</span><div><h2>One connected process</h2><p>Coordinate election tasks in one platform.</p></div></article>
         </section>
 
