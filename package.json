@@ -12,7 +12,7 @@
     "postbuild": "npx prisma db push",
     "start": "node dist/server.js",
     "prisma": "prisma",
-    "seed": "tsx prisma/seed.ts"
+    "seed": "tsx src/seed.ts"
   },
   "allowScripts": {
     "@prisma/client": true,

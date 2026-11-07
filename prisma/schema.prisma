@@ -37,7 +37,8 @@ model University {
   createdAt    DateTime         @default(now())
   updatedAt    DateTime         @updatedAt
 
-  users     User[]     @relation("UniversityUsers")
+  users     User[]
+    @relation("UniversityUsers")
   voters    Voter[]
   elections Election[]
 
@@ -103,7 +104,11 @@ model Election {
   createdById  String?
   createdBy    User?          @relation("CreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
   createdAt    DateTime       @default(now())
-  updatedAt    DateTime       
+  updatedAt    DateTime       @updatedAt
+
+  candidates Candidate[]
+  voteTokens VoteToken[]
+  votes      Vote[]
 
   @@index([universityId, status])
 }
@@ -124,6 +129,8 @@ model Candidate {
   name        String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  votes Vote[]
 
   @@index([electionId])
 }
@@ -146,15 +153,15 @@ model VoteToken {
 }
 
 model Vote {
-  id          String     @id @default(uuid())
-  election    Election   @relation(fields: [electionId], references: [id], onDelete: Cascade)
-  electionId  String
-  candidate   String
-  candidateId String?
+  id           String     @id @default(uuid())
+  election     Election   @relation(fields: [electionId], references: [id], onDelete: Cascade)
+  electionId   String
+  candidate    String
+  candidateId  String?
   candidateRef Candidate? @relation(fields: [candidateId], references: [id], onDelete: SetNull)
-  position    String     @default("General")
-  tokenHash   String
-  createdAt   DateTime   @default(now())
+  position     String     @default("General")
+  tokenHash    String
+  createdAt    DateTime   @default(now())
 
   @@index([electionId])
   @@index([electionId, position])
