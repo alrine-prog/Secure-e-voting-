@@ -4,6 +4,12 @@ import crypto from 'crypto';
 
 const isUniversityAdmin = (role: unknown) => role === 'university_admin' || role === 'uni_admin';
 
+const getSingleString = (value: unknown): string => {
+  if (typeof value === 'string') return value;
+  if (Array.isArray(value) && typeof value[0] === 'string') return value[0];
+  return '';
+};
+
 type AuthenticatedRequest = Request & { auth?: { userId: string; role: string; universityId: string | null }; user?: { email?: string } };
 
 const getApprovedVoter = async (req: AuthenticatedRequest) => {
@@ -55,12 +61,13 @@ export const listVoterBallotsHandler = async (req: AuthenticatedRequest, res: Re
 };
 
 export const castAuthenticatedPostVoteHandler = async (req: AuthenticatedRequest, res: Response) => {
-  const electionId = req.params.electionId as string;
-  const position = typeof req.body.position === 'string' ? req.body.position.trim() : '';
-  const candidateId = typeof req.body.candidateId === 'string' ? req.body.candidateId : '';
+  const electionId = getSingleString(req.params.electionId);
+  const body = req.body as { position?: unknown; candidateId?: unknown };
+  const position = getSingleString(body?.position).trim();
+  const candidateId = getSingleString(body?.candidateId);
   const auth = req.auth;
   if (!auth || auth.role !== 'voter' || !auth.universityId) return res.status(403).json({ error: 'Voter access required.' });
-  if (!position || !candidateId) return res.status(400).json({ error: 'position and candidateId are required.' });
+  if (!electionId || !position || !candidateId) return res.status(400).json({ error: 'electionId, position and candidateId are required.' });
 
   try {
     const voter = await getApprovedVoter(req);
@@ -99,9 +106,11 @@ export const castAuthenticatedPostVoteHandler = async (req: AuthenticatedRequest
 };
 
 export const castVoteHandler = async (req: Request, res: Response) => {
-  const electionId = req.params.electionId;
-  const { token, candidate } = req.body as { token?: string; candidate?: string };
-  if (!token || !candidate) return res.status(400).json({ error: 'token and candidate are required' });
+  const electionId = getSingleString(req.params.electionId);
+  const body = req.body as { token?: unknown; candidate?: unknown };
+  const token = getSingleString(body?.token);
+  const candidate = getSingleString(body?.candidate);
+  if (!electionId || !token || !candidate) return res.status(400).json({ error: 'electionId, token and candidate are required' });
 
   try {
     const election = await prisma.election.findUnique({ where: { id: electionId } });
@@ -171,9 +180,10 @@ export const listAvailableElectionsHandler = async (req: Request, res: Response)
 };
 
 export const issueTokensHandler = async (req: Request, res: Response) => {
-  const electionId = req.params.electionId as string;
+  const electionId = getSingleString(req.params.electionId);
   const auth = (req as any).auth;
   if (!auth || !isUniversityAdmin(auth.role) || !auth.universityId) return res.status(403).json({ error: 'University administrator access required.' });
+  if (!electionId) return res.status(400).json({ error: 'Election ID is required.' });
   try {
     const election = await prisma.election.findUnique({ where: { id: electionId } });
     if (!election || election.universityId !== auth.universityId) return res.status(404).json({ error: 'Election not found for this university.' });
