@@ -30,7 +30,7 @@ const getAuthorizedElection = async (electionId: string, auth: any) => {
 };
 
 const candidateFields = (body: Record<string, unknown> = {}): CandidateInput => ({
-  fullName: cleanText(body.fullName ?? body.name),
+  fullName: cleanText(body.fullName),
   position: cleanText(body.position),
   faculty: cleanText(body.faculty),
   college: cleanText(body.college),
@@ -57,7 +57,7 @@ export const createCandidateHandler = async (req: Request, res: Response) => {
     const candidate = await prisma.candidate.create({
       data: {
         ...fields,
-        name: fields.fullName,
+        fullname: fields.fullName,
         description: fields.description || null,
         photoUrl,
         election: { connect: { id: electionId } },
@@ -103,7 +103,7 @@ export const updateCandidateHandler = async (req: Request, res: Response) => {
       where: { id: candidateId },
       data: {
         ...fields,
-        name: fields.fullName,
+        fullname: fields.fullName,
         description: fields.description || null,
         ...(req.file ? { photoUrl: `/elections/candidate-photos/${req.file.filename}` } : {}),
       },
