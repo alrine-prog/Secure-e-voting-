@@ -2,7 +2,12 @@ import { Request, Response } from 'express';
 import prisma from '../prismaClient';
 
 const isUniversityAdmin = (role: unknown) => role === 'university_admin' || role === 'uni_admin';
-const singleString = (value: unknown): string => typeof value === 'string' ? value : '';
+
+const singleString = (value: unknown): string => {
+  if (typeof value === 'string') return value;
+  if (Array.isArray(value) && value.length > 0 && typeof value[0] === 'string') return value[0];
+  return '';
+};
 
 export const createElectionHandler = async (req: Request, res: Response) => {
   const universityId = singleString(req.params.universityId);
@@ -32,10 +37,12 @@ export const createElectionHandler = async (req: Request, res: Response) => {
         endAt: end,
         status: 'draft',
         universityId,
-        createdById: auth.userId
-      }
+        createdById: auth.userId,
+      },
     });
-    await prisma.auditLog.create({ data: { userId: auth.userId, action: 'create_election', resourceType: 'election', resourceId: election.id } });
+    await prisma.auditLog.create({
+      data: { userId: auth.userId, action: 'create_election', resourceType: 'election', resourceId: election.id },
+    });
     return res.status(201).json({ success: true, election });
   } catch (error) {
     console.error(error);
@@ -46,9 +53,21 @@ export const createElectionHandler = async (req: Request, res: Response) => {
 export const listElectionsHandler = async (req: Request, res: Response) => {
   const universityId = singleString(req.params.universityId);
   const auth = (req as any).auth;
-  if (!auth || !isUniversityAdmin(auth.role) || auth.universityId !== universityId) return res.status(403).json({ error: 'University access denied.' });
+
+  if (!auth || !isUniversityAdmin(auth.role) || auth.universityId !== universityId) {
+    return res.status(403).json({ error: 'University access denied.' });
+  }
+
   try {
-    const elections = await prisma.election.findMany({ where: { universityId }, include: { candidates: { orderBy: [{ position: 'asc' }, { name: 'asc' }] } }, orderBy: { createdAt: 'desc' } });
+    const elections = await prisma.election.findMany({
+      where: { universityId },
+      include: {
+        candidates: {
+          orderBy: [{ position: 'asc' }, { fullName: 'asc' }], // Fixed: Changed 'name' to 'fullName'
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
     return res.json({ success: true, elections });
   } catch (error) {
     console.error(error);
@@ -59,20 +78,44 @@ export const listElectionsHandler = async (req: Request, res: Response) => {
 const setElectionStatus = async (req: Request, res: Response, status: 'open' | 'closed') => {
   const electionId = singleString(req.params.electionId);
   const auth = (req as any).auth;
-  if (!auth || !isUniversityAdmin(auth.role)) return res.status(403).json({ error: 'University administrator access required.' });
+
+  if (!auth || !isUniversityAdmin(auth.role)) {
+    return res.status(403).json({ error: 'University administrator access required.' });
+  }
   if (!electionId) return res.status(400).json({ error: 'Election ID is required.' });
+
   try {
-    const election = await prisma.election.findUnique({ where: { id: electionId }, include: { _count: { select: { candidates: true } } } });
-    if (!election || election.universityId !== auth.universityId) return res.status(404).json({ error: 'Election not found for this university.' });
+    const election = await prisma.election.findUnique({
+      where: { id: electionId },
+      include: { _count: { select: { candidates: true } } },
+    });
+
+    if (!election || election.universityId !== auth.universityId) {
+      return res.status(404).json({ error: 'Election not found for this university.' });
+    }
+
     if (status === 'open') {
       if (election.status !== 'draft') return res.status(409).json({ error: 'Only draft elections can be opened.' });
-      if (election._count.candidates === 0) return res.status(400).json({ error: 'Add at least one candidate before opening the election.' });
-      if (new Date(election.endAt) <= new Date()) return res.status(400).json({ error: 'This election has already passed its end time.' });
+      if (election._count.candidates === 0) {
+        return res.status(400).json({ error: 'Add at least one candidate before opening the election.' });
+      }
+      if (new Date(election.endAt) <= new Date()) {
+        return res.status(400).json({ error: 'This election has already passed its end time.' });
+      }
     } else if (election.status !== 'open') {
       return res.status(409).json({ error: 'Only open elections can be closed.' });
     }
+
     const updated = await prisma.election.update({ where: { id: electionId }, data: { status } });
-    await prisma.auditLog.create({ data: { userId: auth.userId, action: status === 'open' ? 'open_election' : 'close_election', resourceType: 'election', resourceId: electionId } });
+    await prisma.auditLog.create({
+      data: {
+        userId: auth.userId,
+        action: status === 'open' ? 'open_election' : 'close_election',
+        resourceType: 'election',
+        resourceId: electionId,
+      },
+    });
+
     return res.json({ success: true, election: updated });
   } catch (error) {
     console.error(error);
@@ -86,21 +129,34 @@ export const closeElectionHandler = (req: Request, res: Response) => setElection
 export const getResultsHandler = async (req: Request, res: Response) => {
   const electionId = singleString(req.params.electionId);
   const auth = (req as any).auth;
-  if (!auth || !isUniversityAdmin(auth.role)) return res.status(403).json({ error: 'University administrator access required.' });
+
+  if (!auth || !isUniversityAdmin(auth.role)) {
+    return res.status(403).json({ error: 'University administrator access required.' });
+  }
   if (!electionId) return res.status(400).json({ error: 'Election ID is required.' });
+
   try {
     const election = await prisma.election.findUnique({ where: { id: electionId } });
     if (!election) return res.status(404).json({ error: 'Election not found.' });
     if (auth.universityId !== election.universityId) return res.status(403).json({ error: 'University access denied.' });
+
     const candidates = await prisma.candidate.findMany({ where: { electionId } });
-    const voteCounts = await prisma.vote.groupBy({ by: ['candidateId', 'candidate'], where: { electionId }, _count: { _all: true } });
+    const voteCounts = await prisma.vote.groupBy({
+      by: ['candidateId', 'candidate'],
+      where: { electionId },
+      _count: { _all: true },
+    });
+
     const results = candidates.map((candidate) => ({
       candidateId: candidate.id,
-      name: candidate.name ?? candidate.fullName,
+      fullName: candidate.fullName, // Fixed: Changed candidate.name to candidate.fullName
       position: candidate.position,
       description: candidate.description,
-      votes: voteCounts.filter((vote) => vote.candidateId === candidate.id || (!vote.candidateId && vote.candidate === (candidate.name ?? candidate.fullName))).reduce((sum, vote) => sum + vote._count._all, 0)
+      votes: voteCounts
+        .filter((vote) => vote.candidateId === candidate.id || (!vote.candidateId && vote.candidate === candidate.fullName))
+        .reduce((sum, vote) => sum + vote._count._all, 0),
     }));
+
     return res.json({ success: true, results });
   } catch (error) {
     console.error(error);
