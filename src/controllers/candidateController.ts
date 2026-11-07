@@ -30,7 +30,7 @@ const getAuthorizedElection = async (electionId: string, auth: any) => {
 };
 
 const candidateFields = (body: Record<string, unknown> = {}): CandidateInput => ({
-  fullName: cleanText(body.fullName),
+  fullName: cleanText(body.fullName ?? body.name),
   position: cleanText(body.position),
   faculty: cleanText(body.faculty),
   college: cleanText(body.college),
@@ -54,19 +54,13 @@ export const createCandidateHandler = async (req: Request, res: Response) => {
     if ('error' in access) return res.status(access.status).json({ error: access.error });
 
     const photoUrl = req.file ? `/elections/candidate-photos/${req.file.filename}` : null;
-    
-    // Omit 'fullName' so it doesn't get passed into Prisma payload alongside 'name'
-    const { fullName, ...restFields } = fields;
-
     const candidate = await prisma.candidate.create({
       data: {
-        ...restFields,
-        name: fullName,
+        ...fields,
+        name: fields.fullName,
         description: fields.description || null,
         photoUrl,
-        election: {
-          connect: { id: electionId },
-        },
+        election: { connect: { id: electionId } },
       },
     });
     await prisma.auditLog.create({
@@ -105,13 +99,11 @@ export const updateCandidateHandler = async (req: Request, res: Response) => {
     const existing = await prisma.candidate.findFirst({ where: { id: candidateId, electionId } });
     if (!existing) return res.status(404).json({ error: 'Candidate not found' });
 
-    const { fullName, ...restFields } = fields;
-
     const candidate = await prisma.candidate.update({
       where: { id: candidateId },
       data: {
-        ...restFields,
-        name: fullName,
+        ...fields,
+        name: fields.fullName,
         description: fields.description || null,
         ...(req.file ? { photoUrl: `/elections/candidate-photos/${req.file.filename}` } : {}),
       },

@@ -19,8 +19,6 @@ const getApprovedVoter = async (req: AuthenticatedRequest) => {
   return prisma.voter.findFirst({ where: { universityId: auth.universityId, email: { equals: email, mode: 'insensitive' }, approved: true } });
 };
 
-// Assign one opaque, server-managed single-use token to each post in every open election.
-// Only the token hash is stored; the voter uses their authenticated session to cast.
 export const listVoterBallotsHandler = async (req: AuthenticatedRequest, res: Response) => {
   const auth = req.auth;
   if (!auth || auth.role !== 'voter' || !auth.universityId) return res.status(403).json({ error: 'Voter access required.' });
@@ -48,7 +46,7 @@ export const listVoterBallotsHandler = async (req: AuthenticatedRequest, res: Re
       const positionsWithStatus = positions.map((position) => ({
         position,
         voted: tokenByPosition.get(position)?.used || false,
-        candidates: election.candidates.filter((candidate) => candidate.position === position).map(({ id, name, description }) => ({ id, name, description }))
+        candidates: election.candidates.filter((candidate) => candidate.position === position).map(({ id, name, fullName, description }) => ({ id, name: name ?? fullName, description }))
       }));
       return { id: election.id, title: election.title, description: election.description, startAt: election.startAt, endAt: election.endAt, positions: positionsWithStatus };
     }));
@@ -93,7 +91,7 @@ export const castAuthenticatedPostVoteHandler = async (req: AuthenticatedRequest
       if (!token) throw new Error('Could not assign a voting token for this post.');
       const claimed = await tx.voteToken.updateMany({ where: { id: token.id, voterId: voter.id, electionId, position, used: false }, data: { used: true, usedAt: new Date() } });
       if (claimed.count !== 1) throw new Error('You have already voted for this post.');
-      return tx.vote.create({ data: { electionId, candidate: candidateRecord.name, candidateId: candidateRecord.id, position, tokenHash: token.tokenHash } });
+      return tx.vote.create({ data: { electionId, candidate: candidateRecord.name ?? candidateRecord.fullName, candidateId: candidateRecord.id, position, tokenHash: token.tokenHash } });
     });
 
     return res.json({ success: true, voteId: result.id, position, message: `Your vote for ${position} has been recorded.` });
@@ -116,9 +114,7 @@ export const castVoteHandler = async (req: Request, res: Response) => {
     const election = await prisma.election.findUnique({ where: { id: electionId } });
     if (!election) return res.status(404).json({ error: 'Election not found.' });
     const now = new Date();
-    if (election.status !== 'open' || now < election.startAt || now > election.endAt) {
-      return res.status(400).json({ error: 'Election is not open for voting' });
-    }
+    if (election.status !== 'open' || now < election.startAt || now > election.endAt) return res.status(400).json({ error: 'Election is not open for voting' });
 
     const selectedCandidate = await prisma.candidate.findFirst({ where: { id: candidate, electionId } });
     if (!selectedCandidate) return res.status(400).json({ error: 'Choose a valid candidate for this election' });
@@ -148,25 +144,10 @@ export const listAvailableElectionsHandler = async (req: Request, res: Response)
   try {
     const now = new Date();
     const elections = await prisma.election.findMany({
-      where: {
-        universityId: auth.universityId,
-        status: 'open',
-        startAt: { lte: now },
-        endAt: { gte: now },
-      },
+      where: { universityId: auth.universityId, status: 'open', startAt: { lte: now }, endAt: { gte: now } },
       include: {
         candidates: {
-          select: {
-            id: true,
-            fullName: true,
-            position: true,
-            faculty: true,
-            college: true,
-            party: true,
-            symbol: true,
-            photoUrl: true,
-            description: true,
-          },
+          select: { id: true, fullName: true, name: true, position: true, faculty: true, college: true, party: true, symbol: true, photoUrl: true, description: true },
           orderBy: { createdAt: 'asc' },
         },
       },
@@ -188,7 +169,7 @@ export const issueTokensHandler = async (req: Request, res: Response) => {
     const election = await prisma.election.findUnique({ where: { id: electionId } });
     if (!election || election.universityId !== auth.universityId) return res.status(404).json({ error: 'Election not found for this university.' });
     const voters = await prisma.voter.findMany({ where: { universityId: auth.universityId, approved: true } });
-    const tokensCreated = [];
+    const tokensCreated: Array<{ voterId: string; token: string }> = [];
     for (const voter of voters) {
       const existingToken = await prisma.voteToken.findFirst({ where: { electionId, voterId: voter.id } });
       if (!existingToken) {
