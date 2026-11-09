@@ -15,6 +15,11 @@ const cookieOptions = () => {
   return options;
 };
 
+const buildResetLink = (email: string, token: string) => {
+  const base = (process.env.FRONTEND_URL || 'http://localhost:3000').replace(/\/$/, '');
+  return `${base}/reset-password?email=${encodeURIComponent(email)}&token=${encodeURIComponent(token)}`;
+};
+
 export const loginHandler = async (req: Request, res: Response) => {
   const email = typeof req.body.email === 'string' ? req.body.email.trim().toLowerCase() : '';
   const password = req.body.password;
@@ -73,29 +78,38 @@ export const logoutHandler = async (_req: Request, res: Response) => {
   return res.json({ success: true });
 };
 
-// Always return the same response for known and unknown accounts. Reset codes are
-// emailed only through a configured provider; they are never logged as fallback output.
+// Always return the same response for known and unknown accounts. Reset links are
+// emailed only through a configured provider; their tokens are never logged.
 export const forgotPasswordHandler = async (req: Request, res: Response) => {
   const email = typeof req.body.email === 'string' ? req.body.email.trim().toLowerCase()
     : typeof req.body.emailOrPhone === 'string' ? req.body.emailOrPhone.trim().toLowerCase() : '';
-  const genericResponse = { success: true, message: 'If that account exists, password reset instructions will be emailed.' };
+  const genericResponse = { success: true, message: 'If that account exists, a password reset link will be emailed.' };
   if (!email) return res.status(200).json(genericResponse);
 
   try {
     const user = await prisma.user.findUnique({ where: { email } });
     if (!user || !user.isActive) return res.status(200).json(genericResponse);
 
-    const otp = crypto.randomInt(100000, 1000000).toString();
-    const otpHash = crypto.createHash('sha256').update(otp).digest('hex');
+    const resetToken = crypto.randomBytes(32).toString('base64url');
+    const tokenHash = crypto.createHash('sha256').update(resetToken).digest('hex');
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
-    const reset = await prisma.passwordResetOtp.create({ data: { userId: user.id, otpHash, channel: 'email', expiresAt } });
+    const reset = await prisma.passwordResetOtp.create({
+      data: { userId: user.id, otpHash: tokenHash, channel: 'email', expiresAt }
+    });
+
     try {
-      await sendCredentialEmail({ to: user.email, subject: 'Password reset code', text: `Your password reset code is ${otp}. It expires in 10 minutes. If you did not request this, ignore this email.` });
+      const resetLink = buildResetLink(user.email, resetToken);
+      await sendCredentialEmail({
+        to: user.email,
+        subject: 'Reset your password',
+        text: `Hello,\n\nUse the link below to reset your password. It expires in 10 minutes.\n\n${resetLink}\n\nIf you did not request this, ignore this email.`
+      });
     } catch (error) {
       await prisma.passwordResetOtp.update({ where: { id: reset.id }, data: { used: true } });
       console.error('Password-reset email delivery failed.');
       return res.status(200).json(genericResponse);
     }
+
     await prisma.auditLog.create({ data: { userId: user.id, action: 'request_password_reset', resourceType: 'user', resourceId: user.id } });
     return res.status(200).json(genericResponse);
   } catch (error) {
@@ -105,34 +119,43 @@ export const forgotPasswordHandler = async (req: Request, res: Response) => {
 };
 
 export const resetPasswordHandler = async (req: Request, res: Response) => {
-  const email = typeof req.body.email === 'string' ? req.body.email.trim().toLowerCase()
-    : typeof req.body.emailOrPhone === 'string' ? req.body.emailOrPhone.trim().toLowerCase() : '';
-  const otp = typeof req.body.otp === 'string' ? req.body.otp.trim() : '';
+  const email = typeof req.body.email === 'string' ? req.body.email.trim().toLowerCase() : '';
+  const token = typeof req.body.token === 'string' ? req.body.token.trim() : '';
   const newPassword = req.body.newPassword;
-  if (!email || !/^\d{6}$/.test(otp) || typeof newPassword !== 'string') return res.status(400).json({ error: 'A valid email, six-digit code, and new password are required.' });
-  if (!passwordIsStrong(newPassword)) return res.status(400).json({ error: 'New password must be at least 12 characters and include upper/lowercase letters, a number, and a symbol.' });
+
+  if (!email || !token || typeof newPassword !== 'string') {
+    return res.status(400).json({ error: 'A valid reset link and new password are required.' });
+  }
+  if (!passwordIsStrong(newPassword)) {
+    return res.status(400).json({ error: 'New password must be at least 12 characters and include upper/lowercase letters, a number, and a symbol.' });
+  }
 
   try {
     const user = await prisma.user.findUnique({ where: { email } });
-    if (!user || !user.isActive) return res.status(400).json({ error: 'Invalid or expired reset code.' });
-    const otpHash = crypto.createHash('sha256').update(otp).digest('hex');
+    if (!user || !user.isActive) return res.status(400).json({ error: 'Invalid or expired reset link.' });
+
+    const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
     const reset = await prisma.passwordResetOtp.findFirst({
-      where: { userId: user.id, otpHash, channel: 'email', used: false, expiresAt: { gt: new Date() } },
+      where: { userId: user.id, otpHash: tokenHash, channel: 'email', used: false, expiresAt: { gt: new Date() } },
       orderBy: { createdAt: 'desc' }
     });
-    if (!reset) return res.status(400).json({ error: 'Invalid or expired reset code.' });
+    if (!reset) return res.status(400).json({ error: 'Invalid or expired reset link.' });
 
     const passwordHash = await bcrypt.hash(newPassword, 12);
     await prisma.$transaction(async (tx) => {
-      const claimed = await tx.passwordResetOtp.updateMany({ where: { id: reset.id, used: false, expiresAt: { gt: new Date() } }, data: { used: true } });
-      if (claimed.count !== 1) throw new Error('RESET_CODE_ALREADY_USED');
+      const claimed = await tx.passwordResetOtp.updateMany({
+        where: { id: reset.id, used: false, expiresAt: { gt: new Date() } },
+        data: { used: true }
+      });
+      if (claimed.count !== 1) throw new Error('RESET_LINK_ALREADY_USED');
       await tx.user.update({ where: { id: user.id }, data: { passwordHash, mustChangePassword: false } });
       await tx.auditLog.create({ data: { userId: user.id, action: 'reset_password', resourceType: 'user', resourceId: user.id } });
     });
+
     res.clearCookie('token', { path: '/' });
     return res.json({ success: true, message: 'Password updated. Sign in with your new password.' });
   } catch (error: any) {
-    if (error?.message === 'RESET_CODE_ALREADY_USED') return res.status(400).json({ error: 'Invalid or expired reset code.' });
+    if (error?.message === 'RESET_LINK_ALREADY_USED') return res.status(400).json({ error: 'Invalid or expired reset link.' });
     console.error('Password reset failed:', error);
     return res.status(500).json({ error: 'Could not reset password.' });
   }
