@@ -50,6 +50,26 @@ body { overflow-x: hidden; }
 }
 .dashboard-page .public-form > label input[type="file"] { padding: 8px; }
 
+.password-input-wrap { position: relative; display: flex; width: 100%; min-width: 0; }
+.password-input-wrap input { width: 100%; min-width: 0; padding-right: 68px !important; }
+.password-visibility-toggle {
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  min-width: 48px;
+  min-height: 34px;
+  transform: translateY(-50%);
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #72552e;
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 750;
+}
+.password-visibility-toggle:focus-visible { outline: 2px solid #9c8058; outline-offset: 2px; }
+
 /* Give the brand and navigation their own rows instead of overlapping. */
 @media (max-width: 760px) {
   .top-nav {
@@ -112,6 +132,43 @@ body { overflow-x: hidden; }
   .dashboard-button { max-width: 100%; white-space: normal; }
   .public-footer { align-items: flex-start; flex-direction: column; gap: 10px; }
   .public-footer p { text-align: left; }
+
+  .login-main {
+    width: calc(100% - 28px);
+    gap: 16px;
+    padding: 28px 0 32px;
+  }
+  .login-intro h1 { margin: 8px 0; font-size: clamp(32px, 9vw, 42px); }
+  .login-intro > p { margin: 0 auto; font-size: 13px; line-height: 1.55; }
+  .login-assurance { margin-top: 12px; }
+  .login-card { padding: 18px 16px; border-radius: 11px; }
+  .login-card h2 { margin: 12px 0 5px; font-size: 19px; }
+  .login-card-intro { margin-bottom: 14px; }
+  .login-form { gap: 12px; }
+  .login-form .form-field { gap: 5px; }
+  .login-form .form-field input { min-height: 42px; padding: 9px 10px; }
+  .login-submit { min-height: 43px; }
+  .login-help { margin-top: 12px; }
+
+  .dashboard-main { padding-top: 22px; padding-bottom: 28px; }
+  .dashboard-heading { padding-bottom: 17px; }
+  .dashboard-stat-grid { gap: 10px; margin: 15px 0; }
+  .dashboard-stat { padding: 14px; }
+  .dashboard-stat strong { margin: 7px 0 4px; }
+  .dashboard-card { padding: 15px; border-radius: 9px; }
+  .dashboard-grid { gap: 12px; margin-top: 13px; }
+  .dashboard-card h2 { font-size: 16px; }
+}
+
+@media (max-width: 360px) {
+  .login-main { width: calc(100% - 20px); gap: 12px; padding: 20px 0 24px; }
+  .login-intro h1 { font-size: 30px; }
+  .login-card { padding: 15px 13px; }
+  .login-card h2 { font-size: 18px; }
+  .dashboard-main { width: calc(100% - 20px) !important; }
+  .dashboard-card { padding: 12px; }
+  .dashboard-stat { padding: 12px; }
+  .dashboard-page > .top-nav { width: calc(100% - 20px) !important; }
 }
 
 .public-footer-links {
