@@ -9,6 +9,7 @@ import {
   listUniversityAuditLogsHandler,
   setUniversityAccountStatusHandler
 } from '../controllers/universityAdminController';
+import { universityDirectoryHandler } from '../controllers/universityDirectoryController';
 import { profilePhotoUpload } from '../utils/profilePhotoUpload';
 
 const router = express.Router();
@@ -25,6 +26,7 @@ router.post('/universities/:universityId/:accountType(staff|observers)', require
   return createObserverAccountHandler(req, res, next);
 });
 router.get('/universities/:universityId/accounts', requireAuth, requireRole('university_admin'), requireUniversityAccess, listUniversityAccountsHandler);
+router.get('/universities/:universityId/directory/:type(staff|observers|voters)', requireAuth, requireRole('university_admin'), requireUniversityAccess, universityDirectoryHandler);
 router.post('/universities/:universityId/accounts/:userId/:action(suspend|reactivate)', requireAuth, requireRole('university_admin'), requireUniversityAccess, setUniversityAccountStatusHandler);
 router.get('/universities/:universityId/audit-logs', requireAuth, requireRole('university_admin'), requireUniversityAccess, listUniversityAuditLogsHandler);
 export default router;
