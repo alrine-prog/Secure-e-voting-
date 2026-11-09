@@ -10,6 +10,8 @@ export default function ResetPasswordPage() {
   const [token, setToken] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
@@ -72,17 +74,21 @@ export default function ResetPasswordPage() {
           <form onSubmit={submit} className="public-form login-form">
             <div className="form-field">
               <label htmlFor="new-password">New password</label>
-              <input id="new-password" type="password" autoComplete="new-password" minLength={12} value={newPassword} onChange={(event) => setNewPassword(event.target.value)} required />
+              <div className="password-input-wrap">
+                <input id="new-password" type={showNewPassword ? 'text' : 'password'} autoComplete="new-password" minLength={12} value={newPassword} onChange={(event) => setNewPassword(event.target.value)} required />
+                <button className="password-visibility-toggle" type="button" onClick={() => setShowNewPassword((visible) => !visible)} aria-pressed={showNewPassword} aria-label={showNewPassword ? 'Hide new password' : 'Show new password'}>{showNewPassword ? 'Hide' : 'Show'}</button>
+              </div>
             </div>
             <div className="form-field">
               <label htmlFor="confirm-password">Confirm new password</label>
-              <input id="confirm-password" type="password" autoComplete="new-password" minLength={12} value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} required />
+              <div className="password-input-wrap">
+                <input id="confirm-password" type={showConfirmPassword ? 'text' : 'password'} autoComplete="new-password" minLength={12} value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} required />
+                <button className="password-visibility-toggle" type="button" onClick={() => setShowConfirmPassword((visible) => !visible)} aria-pressed={showConfirmPassword} aria-label={showConfirmPassword ? 'Hide confirmation password' : 'Show confirmation password'}>{showConfirmPassword ? 'Hide' : 'Show'}</button>
+              </div>
             </div>
             {error && <p className="form-message error-message" role="alert">{error}</p>}
             {message && <p className="form-message" role="status">{message}</p>}
-            <button className="public-submit login-submit" type="submit" disabled={saving}>
-              {saving ? 'Saving…' : 'Reset password'}
-            </button>
+            <button className="public-submit login-submit" type="submit" disabled={saving}>{saving ? 'Saving…' : 'Reset password'}</button>
           </form>
         </section>
       </main>
