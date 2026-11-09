@@ -20,13 +20,28 @@ export const requireAuth = async (req: Request, res: Response, next: NextFunctio
   try {
     const payload = verifyJwt(token) as { userId?: string };
     if (!payload.userId) return res.status(401).json({ error: 'Invalid token' });
-    const user = await prisma.user.findUnique({ where: { id: payload.userId } });
+    const user = await prisma.user.findUnique({
+      where: { id: payload.userId },
+      include: { university: { select: { name: true } } }
+    });
     if (!user || !user.isActive) return res.status(401).json({ error: 'Invalid or inactive account' });
+
     (req as any).auth = { userId: user.id, role: user.role, universityId: user.universityId };
-    (req as any).user = { id: user.id, email: user.email, role: user.role, universityId: user.universityId, mustChangePassword: user.mustChangePassword };
+    (req as any).user = {
+      id: user.id,
+      email: user.email,
+      username: user.username,
+      firstName: user.firstName,
+      secondName: user.secondName,
+      photoUrl: user.photoUrl,
+      role: user.role,
+      universityId: user.universityId,
+      organizationName: user.university?.name || null,
+      mustChangePassword: user.mustChangePassword
+    };
 
     const pathname = req.originalUrl.split('?')[0];
-    const allowed = ['/auth/me', '/auth/change-password', '/auth/logout'];
+    const allowed = ['/auth/me', '/auth/change-password', '/auth/logout', '/auth/profile/photo'];
     if (user.mustChangePassword && !allowed.includes(pathname)) {
       return res.status(403).json({ error: 'You must change your temporary password before continuing.', code: 'PASSWORD_CHANGE_REQUIRED' });
     }

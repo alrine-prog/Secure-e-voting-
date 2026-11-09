@@ -54,6 +54,7 @@ model User {
   secondName         String
   email              String      @unique
   phone              String?
+  photoUrl           String?
   passwordHash       String
   mustChangePassword Boolean     @default(false)
   isActive           Boolean     @default(true)
@@ -124,7 +125,6 @@ model Candidate {
   symbol      String
   photoUrl    String?
   description String?
-  // Kept in sync with fullName for existing results and integrations.
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
