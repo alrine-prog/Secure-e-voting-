@@ -36,7 +36,7 @@ export default function ChangePasswordPage() {
 
   return (
     <div className="public-page login-page">
-      <Head><title>Change password | Secure E-Voting</title></Head>
+      <Head><title>Change password | Secure Electronic Voting System</title></Head>
       <Nav />
       <main className="login-main">
         <section className="login-intro"><span className="public-eyebrow">Account security</span><h1>Set a new password.</h1><p>Your temporary password can only be used to sign in and set a password you control.</p></section>
