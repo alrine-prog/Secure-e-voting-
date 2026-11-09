@@ -24,7 +24,7 @@ export default function AboutPage() {
         </div>
         <div className="public-cta-strip"><div><span className="public-eyebrow">Get started</span><h2>Bring your institution’s election process together.</h2></div><a className="public-submit" href="/register-university">Register your university <span aria-hidden="true">→</span></a></div>
       </main>
-      <footer className="public-footer"><span>Secure E-Voting</span><p>Secure E-Voting is the product of Alrine Technology. All rights reserved 2026.</p></footer>
+      <footer className="public-footer"><span>Secure E-Voting</span><nav className="public-footer-links" aria-label="Footer navigation"><a href="/about">About</a><a href="/policies">Policies</a><a href="/contact">Support</a></nav><p>Secure E-Voting is the product of Alrine Technology. All rights reserved 2026.</p></footer>
     </div>
   );
 }

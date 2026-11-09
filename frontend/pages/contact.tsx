@@ -97,7 +97,7 @@ export default function ContactPage() {
             </aside>
           </div>
         </main>
-        <footer className="public-footer"><span>Secure E-Voting</span><p>Secure E-Voting is the product of Alrine Technology. All rights reserved 2026.</p></footer>
+        <footer className="public-footer"><span>Secure E-Voting</span><nav className="public-footer-links" aria-label="Footer navigation"><a href="/about">About</a><a href="/policies">Policies</a><a href="/contact">Support</a></nav><p>Secure E-Voting is the product of Alrine Technology. All rights reserved 2026.</p></footer>
       </div>
     </>
   );

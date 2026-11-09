@@ -1,0 +1,130 @@
+/* Shared sizing and responsive layout fixes, loaded after the page styles. */
+*,
+*::before,
+*::after { box-sizing: border-box; }
+
+html, body, #__next { width: 100%; min-height: 100%; margin: 0; }
+body { overflow-x: hidden; }
+
+.public-page,
+.dashboard-page,
+.landing-page { width: 100%; min-width: 0; }
+.public-main,
+.dashboard-main { min-width: 0; }
+
+/* Keep long labels, tables, and uploaded filenames inside narrow screens. */
+.public-card,
+.dashboard-card,
+.dashboard-stat,
+.contact-layout,
+.dashboard-grid,
+.dashboard-table-wrap { min-width: 0; }
+.dashboard-table-wrap,
+.public-card { overflow-wrap: anywhere; }
+.dashboard-table-wrap { overflow-x: auto; }
+
+/* Stack account form labels and make controls usable on phones. */
+.dashboard-page .public-form > label {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 7px;
+  color: #394a60;
+  font-size: 12px;
+  font-weight: 700;
+}
+.dashboard-page .public-form > label input,
+.dashboard-page .public-form > label select,
+.dashboard-page .public-form > label textarea {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  min-height: 42px;
+  padding: 10px 11px;
+  border: 1px solid #dfe5ec;
+  border-radius: 6px;
+  background: #fff;
+  color: #17283e;
+  font: inherit;
+  font-size: 14px;
+}
+.dashboard-page .public-form > label input[type="file"] { padding: 8px; }
+
+/* Give the brand and navigation their own rows instead of overlapping. */
+@media (max-width: 760px) {
+  .top-nav {
+    width: calc(100% - 28px) !important;
+    min-width: 0;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+  }
+  .top-nav .nav-links {
+    width: 100%;
+    max-width: 100% !important;
+    flex: 1 1 100%;
+    flex-wrap: wrap;
+    gap: 10px 16px;
+  }
+  .top-nav .nav-brand {
+    width: auto !important;
+    flex: 0 0 auto;
+    margin: 0 8px 0 0 !important;
+  }
+  .top-nav .menu-wrap {
+    width: 100%;
+    max-width: 100%;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    gap: 9px;
+    margin: 0;
+  }
+  .top-nav .menu-wrap > div { max-width: min(250px, calc(100vw - 90px)) !important; }
+  .top-nav .nav-brand > span:last-child { display: inline-flex; gap: .2em; }
+
+  .public-page > .top-nav,
+  .dashboard-page > .top-nav { margin-right: auto; margin-left: auto; }
+  .public-main,
+  .dashboard-main { width: calc(100% - 32px); }
+  .public-main { padding-top: clamp(30px, 7vw, 46px); padding-bottom: 42px; }
+  .dashboard-main { padding-top: clamp(25px, 6vw, 36px); padding-bottom: 40px; }
+  .dashboard-grid-two,
+  .contact-layout { grid-template-columns: minmax(0, 1fr); }
+  .dashboard-stat-grid { grid-template-columns: repeat(auto-fit, minmax(min(100%, 190px), 1fr)); }
+  .dashboard-card { padding: clamp(16px, 4vw, 24px); }
+  .public-footer,
+  .dashboard-footer { width: calc(100% - 32px); }
+  .public-footer { justify-content: flex-start; flex-wrap: wrap; }
+}
+
+@media (max-width: 480px) {
+  .public-page > .top-nav,
+  .dashboard-page > .top-nav,
+  .public-main,
+  .dashboard-main,
+  .public-footer,
+  .dashboard-footer { width: calc(100% - 24px) !important; }
+  .top-nav .nav-links { gap: 9px 13px; }
+  .top-nav .nav-links > a:not(.nav-brand) { font-size: 12px; }
+  .dashboard-heading { gap: 12px; }
+  .dashboard-heading h1 { font-size: clamp(26px, 8vw, 34px); }
+  .dashboard-card-heading { flex-wrap: wrap; }
+  .dashboard-button { max-width: 100%; white-space: normal; }
+  .public-footer { align-items: flex-start; flex-direction: column; gap: 10px; }
+  .public-footer p { text-align: left; }
+}
+
+.public-footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 18px;
+}
+.public-footer-links a {
+  color: #536176;
+  font-size: 11px;
+  font-weight: 650;
+  text-decoration: none;
+}
+.public-footer-links a:hover,
+.public-footer-links a:focus-visible { color: #8c6637; }
