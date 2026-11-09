@@ -19,12 +19,8 @@ router.post('/universities/:universityId/reject', requireAuth, requireRole('syst
 router.post('/universities/:universityId/voters/:voterId/approve', requireAuth, requireRole('university_admin'), requireUniversityAccess, approveVoterHandler);
 router.post('/universities/:universityId/elections/:electionId/notify', requireAuth, requireRole('university_admin'), requireUniversityAccess, notifyApprovedVotersHandler);
 router.get('/universities/:universityId/summary', requireAuth, requireRole('university_admin'), requireUniversityAccess, getUniversitySummaryHandler);
-router.post('/universities/:universityId/staff', requireAuth, requireRole('university_admin'), requireUniversityAccess, createStaffAccountHandler);
-router.post('/universities/:universityId/observers', requireAuth, requireRole('university_admin'), requireUniversityAccess, createObserverAccountHandler);
-router.post('/universities/:universityId/:accountType(staff|observers)', requireAuth, requireRole('university_admin'), requireUniversityAccess, profilePhotoUpload.single('photo'), (req, res, next) => {
-  if (req.params.accountType === 'staff') return createStaffAccountHandler(req, res, next);
-  return createObserverAccountHandler(req, res, next);
-});
+router.post('/universities/:universityId/staff', requireAuth, requireRole('university_admin'), requireUniversityAccess, profilePhotoUpload.single('photo'), createStaffAccountHandler);
+router.post('/universities/:universityId/observers', requireAuth, requireRole('university_admin'), requireUniversityAccess, profilePhotoUpload.single('photo'), createObserverAccountHandler);
 router.get('/universities/:universityId/accounts', requireAuth, requireRole('university_admin'), requireUniversityAccess, listUniversityAccountsHandler);
 router.get('/universities/:universityId/directory/:type(staff|observers|voters)', requireAuth, requireRole('university_admin'), requireUniversityAccess, universityDirectoryHandler);
 router.post('/universities/:universityId/accounts/:userId/:action(suspend|reactivate)', requireAuth, requireRole('university_admin'), requireUniversityAccess, setUniversityAccountStatusHandler);
