@@ -22,7 +22,7 @@ export const sendEmail = async (to: string, subject: string, text: string) => {
       secure: Number(process.env.SMTP_PORT || 587) === 465,
       auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS }
     });
-    await transporter.sendMail({ from: process.env.EMAIL_FROM || 'info.alrine@gmail.com, to, subject, text });
+    await transporter.sendMail({ from: process.env.EMAIL_FROM || 'info.alrine@gmail.com', to, subject, text });
     return;
   }
   console.log('--- email (fallback) ---');
