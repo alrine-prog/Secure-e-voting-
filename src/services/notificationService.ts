@@ -59,3 +59,19 @@ export const sendCredentialEmail = async (notification: Notification) => {
     throw new Error('Failed to send credential email: No valid email transport configured (SENDGRID_API_KEY or SMTP credentials required).');
   }
 };
+
+/**
+ * Sends generic notifications to a contact. Accepts individual parameters or an object.
+ */
+export const sendNotificationToContact = async (
+  toOrNotification: string | Notification,
+  subject?: string,
+  text?: string
+) => {
+  if (typeof toOrNotification === 'object') {
+    const { to, subject: sub = 'Notification', text: body } = toOrNotification;
+    return sendEmail(to, sub, body);
+  }
+
+  return sendEmail(toOrNotification, subject || 'Notification', text || '');
+};
