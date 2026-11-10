@@ -31,6 +31,8 @@ nextApp
   .prepare()
   .then(async () => {
     const app = express();
+    // Render's reverse proxy is the single trusted hop in front of this app.
+    app.set('trust proxy', 1);
     app.use(helmet({ contentSecurityPolicy: false }));
     app.use(morgan('dev'));
     app.use(express.json({ limit: '1mb' }));
